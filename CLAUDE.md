@@ -25,6 +25,27 @@ lowest real scores are ordinary words (`haz` 3.31, `bețiv` 3.22) while `zapciu`
 and `logofăt` are all 0.00 and indistinguishable. A tier defined on that band could only
 ever hold common words, at any threshold. Do not wire it back into `ui.db`. The legacy Wikipedia/OSCAR branch and `search_wild.py` are in `archive/`.
 
+**`validate_with_wrodfreq.py` (2026-09-09) is the resolution fix for the problem above,
+not yet wired into anything either.** wRodfreq — the sibling project at
+`../gov2/wrodfreq`, installed here as an editable dependency (`requirements.txt`) — is a
+Romanian frequency table built from 5 open corpora (23.5B+2.19B+1.94B+109.6M+84.4M
+tokens), specifically built to have the coverage `wordfreq` lacks for Romanian. Measured
+on the same 145,358-candidate curated list: **25.7% score exactly 0 Zipf**, not 99.6% —
+resolution the `rare_in_use` tier never had. It also carries `n_reliable`/`n_attesting`/
+`spread` per word (spec §8.3 of `docs/wrodfreq-spec.md` in that repo) — a corroboration
+count across independent corpora, not an average, which is exactly the shape
+`docs/wordfreq-recipe.md` §4 argues for. Staged as a standalone CSV output
+(`forgotten_words_validated_wrodfreq.csv` / `rare_words_wrodfreq.csv`), same status
+`dcr_definitions.csv`/`clre_dcr_definitions.csv` had before anyone decided how to use
+them — **not merged into `make_shortlist.py`'s scoring or `ui.db`** on purpose: doing
+that is a real decision about how much weight a 5-corpus corroboration count should
+carry against the existing historical-attestation-driven score, and isn't made here.
+The two threshold defaults (3.0/3.5 Zipf) are carried over unchanged from
+`validate_with_wordfreq.py` for continuity, but were calibrated for *wordfreq's* Zipf
+distribution — wRodfreq's own floors run lower (e.g. its `web` source's reliability
+floor is -0.67 Zipf, driven by CulturaX's 23.5B-token size), so treat them as a
+starting point, not an assumption the two scales line up.
+
 For the methodological critique (what "forgotten" should mean, corpus options): `docs/conceptual-roadmap.md` first, then `docs/corpus-options.md`.
 
 ### Two things that are easy to get backwards

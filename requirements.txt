@@ -5,6 +5,11 @@ datasets
 wordfreq
 simplemma
 
+# The sibling project this alternative motivated — see validate_with_wrodfreq.py
+# and docs/wordfreq-recipe.md §4. Not on PyPI; editable install of the sibling
+# checkout so it tracks wRodfreq's data as the corpus panel grows.
+-e ../gov2/wrodfreq
+
 # Phase 3 web validation — see search_wild.py
 # ddgs is the default provider (no API key); google-api-python-client is used by --provider google
 ddgs
