@@ -1,6 +1,6 @@
 # F03 — Hide all answer content before grading
 
-Status: open. Priority: P1.
+Status: complete (local). Priority: P1.
 
 ## Evidence and target
 

@@ -2,6 +2,37 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F03 quiz: withhold the whole answer body until grading
+
+Local fix and tests. Not deployed. Live verification is open until the owner deploys.
+
+Reproduction (before the fix): `node tests/test_ghici.js` against a staged server failed in 5 of 5
+runs with `FAIL the pane definition is withheld`. In the runner it failed about half the time,
+because the test only looked for `.definition-text` and the word is random. Cause: structured
+words render `.fp-senses`, `.fp-extras`, citations and synonym chips, which the selector list
+(`.definition-text, .fp-nodef, .fp-pos-line`) did not cover. A second flaky check, `a wrong round
+was reached`, depended on luck. Against the old `ghici.php` the new tests fail on every shape,
+on the stale-response test, and on the wrong-answer comparison of a structured entry.
+
+Fix: `public/ghici.php` withholds `.fp-body` as one unit and `.fp-pos-line` separately, using
+`hidden` + `inert` + `aria-hidden`. Each detail request takes a ticket (`paneSeq`); `load()` also
+bumps it, so a response for an earlier question is dropped. The wrong-answer comparison card now
+reads the senses of a structured entry (it showed "fără definiție locală" before). The wrapper
+already existed in `detail.php`; the contract is written in `docs/fixes/F05-shared-definitions.md`.
+
+Validation (local, isolated private dir): `python3 tools/run_tests.py` 20/20 suites pass.
+`--only ghici` passed 7 of 7 runs. New: jsdom sections 7b-7e (structured, flat, synonym-only,
+grade-before-response, switch-before-response, wrong-answer comparison); new suite
+`tests/test_ghici_browser.js` (Chromium, 1280px and 390px: computed display, innerText, 40 Tab
+presses). Screenshots: scratchpad `f03/`.
+
+Incident: one early diagnostic run used `OTIOS_PRIVATE_DIR` as an environment variable, which the
+app ignores. The jsdom test then wrote one anonymous device, a few quiz answers and toggled marks
+to the dev `private/app.db`. It is a dev file, not production. No data was deleted. Not cleaned.
+
+Skipped / limits: flash mode (unlisted) still shows its pane definition; out of scope. No live
+check. Quiz mode, scoring, pools and the `qid` protocol are unchanged.
+
 ## 2026-10-05 — F02 sync: revision queue and per-word acknowledgements
 
 Local fix and tests. Not deployed. Live verification is open until the owner deploys.

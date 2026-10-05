@@ -30,6 +30,9 @@
 //      side by side are the entire value of the round.
 const { JSDOM, VirtualConsole } = require('./lib/deps').loadJsdom('tests/test_ghici.js');
 
+// F03: the pane's answer body (`.fp-body`) is withheld as ONE unit — `hidden` + `inert`
+// + `aria-hidden` — and revealed in full after grading, right or wrong. Late and stale
+// detail responses are controlled with `window.__detailHook` (see beforeParse below).
 const BASE = process.env.OTIOS_TEST_URL || 'http://127.0.0.1:8011';
 
 let failures = 0;
@@ -49,6 +52,14 @@ async function waitFor(fn, ms = 8000) {
 const jar = {};
 function beforeParse(window) {
   window.fetch = async (url, opts = {}) => {
+    // Test hook: decide which word a detail request gets, and hold its response back.
+    // The server still renders the real fragment (real detail.php markup) for it.
+    if (window.__detailHook && String(url).includes('/api/word.php?word=')) {
+      const u = new URL(url, BASE);
+      const r = await window.__detailHook(u.searchParams.get('word'));
+      if (r && r.word) { u.searchParams.set('word', r.word); url = u.pathname + u.search; }
+      if (r && r.wait) await r.wait;
+    }
     const abs = new URL(url, BASE).href;
     const cookie = Object.entries(jar).map(([k, v]) => `${k}=${v}`).join('; ');
     const res = await fetch(abs, {
@@ -71,6 +82,24 @@ function newConsole() {
   vc.on('jsdomError', e => errors.push(e.message));
   vc.on('error', (...a) => errors.push(a.join(' ')));
   return vc;
+}
+
+// Text a reader can see: skips subtrees that are hidden, inert or aria-hidden.
+function visibleText(node) {
+  if (node.nodeType === 3) return node.textContent;
+  if (node.nodeType !== 1) return '';
+  if (node.hidden || node.hasAttribute('inert') || node.getAttribute('aria-hidden') === 'true'
+      || node.classList.contains('joc-spoiler')) return '';
+  return [...node.childNodes].map(visibleText).join(' ');
+}
+// Focusable elements that a keyboard user can actually reach (no hidden/inert ancestor).
+function reachable(pane) {
+  return [...pane.querySelectorAll('a[href], button, summary, input, select, textarea, [tabindex]')]
+    .filter(el => !el.closest('[hidden], [inert], .joc-spoiler'));
+}
+function gate() {
+  let release; const wait = new Promise(r => { release = r; });
+  return { wait, release };
 }
 
 function open(path) {
@@ -97,10 +126,14 @@ function open(path) {
 
   await waitFor(() => $('#panel-pane .fp-title'));
   check(!!$('#panel-pane .fp-title'), 'detail pane populated');
-  const paneDef = $('#panel-pane .definition-text, #panel-pane .fp-nodef');
-  check(!!paneDef && paneDef.classList.contains('joc-spoiler'), 'the pane definition is withheld');
+  const paneBody = $('#panel-pane .fp-body');
+  check(!!paneBody && paneBody.hidden && paneBody.hasAttribute('inert')
+        && paneBody.getAttribute('aria-hidden') === 'true',
+    'the pane answer body is withheld (hidden + inert + aria-hidden)');
   const panePos = $('#panel-pane .fp-pos-line');
-  check(!panePos || panePos.classList.contains('joc-spoiler'), 'the pane POS line is withheld');
+  check(!panePos || panePos.hidden, 'the pane POS line is withheld');
+  check(reachable($('#panel-pane')).every(el => !el.closest('.fp-body')),
+    'nothing inside the answer body is keyboard reachable');
 
   console.log('\n2. The marks are lifted out of the panel footer');
   const btns = $('#panel-pane .fp-btns');
@@ -113,6 +146,9 @@ function open(path) {
   $$('.joc-choice')[0].click();
   check(await waitFor(() => $('#quiz-actions #quiz-next')), 'the next button appears');
   check($$('.joc-spoiler').length === 0, 'nothing is left withheld after the verdict');
+  check(!$('#panel-pane .fp-body').hidden && !$('#panel-pane .fp-body').hasAttribute('inert')
+        && !$('#panel-pane .fp-body').hasAttribute('aria-hidden'),
+    'the full answer body is visible after the verdict');
   const fb = $('#quiz-feedback');
   check(/corect|greșit/.test(fb.textContent), 'a verdict is stated');
 
@@ -170,6 +206,20 @@ function open(path) {
   // Asserted here rather than after §4: that loop stops at the first win, so a run
   // whose very first answer was correct would never have seen a wrong one. Across
   // both loops it always does.
+  // Play on until a wrong round turns up (each pick is wrong with p≈3/4), so this
+  // assertion does not depend on luck. A wrong round must reveal the full body too.
+  for (let round = 0; round < 20 && !sawWrong; round++) {
+    if ($('#quiz-next')) $('#quiz-next').click();
+    if (!await waitFor(() => $$('.joc-choice').length === 4 && !$('#quiz-next'))) break;
+    $$('.joc-choice')[round % 4].click();
+    if (!await waitFor(() => $('#quiz-next'))) break;
+    if ($('#quiz-feedback').className.includes('no')) {
+      sawWrong = true;
+      await waitFor(() => $('#panel-pane .fp-body'));
+      check(!$('#panel-pane .fp-body').hidden && !$('#panel-pane .fp-body').hasAttribute('inert'),
+        'a wrong answer reveals the full body too');
+    }
+  }
   check(sawWrong, 'a wrong round was reached and asserted too');
 
   console.log('\n5. grilă — a mark group beside every option, and the URL follows');
@@ -202,6 +252,142 @@ function open(path) {
   await waitFor(() => dom2.window.document.querySelector('.joc-choice-row'));
   check(!!dom2.window.document.querySelector('.joc-choice-row'), '?mode=quiz still lands in grilă');
   dom2.window.close();
+
+  console.log('\n7b. F03 — the answer body is withheld as one unit, per content shape');
+  // Real detail.php markup for words with each shape; only the word choice is forced.
+  // Preconditions are asserted too, so a rebuilt ui.db that loses a shape fails loudly.
+  const SHAPES = [
+    ['abraș',  'structured senses + expressions + citations + synonyms',
+      ['.fp-senses', '.fp-extras', '.sense-cite, .sense-cites', '.syn-chip']],
+    ['însul',  'flat definition fallback', ['.definition-text']],
+    ['zăticni', 'synonym-only sense', ['.fp-senses', '.sense-syn']],
+  ];
+  async function playOne(word) {
+    const d = await open('/ghici?game=sensuri');
+    const w = d.window, q = s => w.document.querySelector(s), qa = s => [...w.document.querySelectorAll(s)];
+    w.__detailHook = async () => ({ word });
+    await waitFor(() => qa('.joc-choice').length === 4);
+    await waitFor(() => q('#panel-pane .fp-title'));
+    return { d, w, q, qa };
+  }
+  for (const [word, label, sels] of SHAPES) {
+    const { d, w, q, qa } = await playOne(word);
+    const pane = q('#panel-pane');
+    check(q('#panel-pane .fp-title') && q('#panel-pane .fp-title').textContent.trim() === word,
+      `${label}: pane shows „${word}"`);
+    sels.forEach(sel => check(!!pane.querySelector(sel), `${label}: fixture has ${sel}`));
+    // Everything answer-bearing sits inside the one wrapper, and the wrapper is out.
+    const bearing = ['.fp-senses', '.fp-extras', '.sense-cite', '.sense-cites', '.syn-chip',
+                     '.definition-text', '.fp-chips', '.fp-spelling', '.fp-dicts', '.fp-nodef']
+      .flatMap(sel => [...pane.querySelectorAll(sel)]);
+    check(bearing.length > 0 && bearing.every(el => el.closest('.fp-body[hidden][inert]')),
+      `${label}: every answer element is inside the withheld wrapper`);
+    const firstText = (pane.querySelector('.sense-text, .definition-text') || {}).textContent || '';
+    check(firstText.length > 5 && !visibleText(pane).includes(firstText.trim().slice(0, 25)),
+      `${label}: the definition text is not visible before answering`);
+    check(reachable(pane).every(el => !el.closest('.fp-body')),
+      `${label}: no answer-body control is keyboard reachable`);
+    const posLine = pane.querySelector('.fp-pos-line');
+    check(!posLine || posLine.hidden, `${label}: the POS line is withheld`);
+    check(!!pane.querySelector('.fp-title') && !pane.querySelector('.fp-title').closest('[hidden]'),
+      `${label}: the headword stays visible`);
+    const marks = pane.querySelector('.fp-btns');
+    check(!!marks && !marks.closest('[hidden], [inert]') && reachable(pane).some(el => el.closest('.fp-btns')),
+      `${label}: the marks stay usable`);
+    // Marking does not answer.
+    pane.querySelector('#bookmark-btn').click();
+    await sleep(120);
+    check(q('#quiz-next') === null && q('#quiz-feedback').textContent.trim() === '',
+      `${label}: pressing a mark is not an answer`);
+    pane.querySelector('#bookmark-btn').click();
+    // Answer; reveal in full.
+    qa('.joc-choice')[0].click();
+    check(await waitFor(() => q('#quiz-next')), `${label}: verdict arrives`);
+    const body = q('#panel-pane .fp-body');
+    check(!body.hidden && !body.hasAttribute('inert') && !body.hasAttribute('aria-hidden')
+          && visibleText(q('#panel-pane')).includes(firstText.trim().slice(0, 25)),
+      `${label}: the full body is visible after grading (${q('#quiz-feedback').className.includes('ok') ? 'right' : 'wrong'} answer)`);
+    check(!pane.querySelector('.fp-pos-line') || !pane.querySelector('.fp-pos-line').hidden,
+      `${label}: the POS line is back after grading`);
+    d.window.close();
+  }
+
+  console.log('\n7c. F03 — grade before the detail response arrives');
+  {
+    const g = gate();
+    const d = await open('/ghici?game=sensuri');
+    const w = d.window, q = s => w.document.querySelector(s), qa = s => [...w.document.querySelectorAll(s)];
+    w.__detailHook = async () => ({ word: 'abraș', wait: g.wait });
+    // The hook is installed after the first request may already have started, so use a
+    // fresh question: the next load() goes through the gated hook.
+    await waitFor(() => qa('.joc-choice').length === 4);
+    await waitFor(() => q('#panel-pane .fp-title'));
+    qa('.joc-choice')[0].click();
+    await waitFor(() => q('#quiz-next'));
+    q('#quiz-next').click();
+    await waitFor(() => qa('.joc-choice').length === 4 && !q('#quiz-next'));
+    check(!!q('#panel-pane .panel-placeholder'), 'the pane is still loading');
+    qa('.joc-choice')[1].click();
+    check(await waitFor(() => q('#quiz-next')), 'the verdict arrives while the detail is still pending');
+    g.release();
+    check(await waitFor(() => q('#panel-pane .fp-body')), 'the late detail then lands');
+    const body = q('#panel-pane .fp-body');
+    check(!body.hidden && !body.hasAttribute('inert') && !body.hasAttribute('aria-hidden')
+          && !q('#panel-pane .fp-pos-line, #panel-pane .fp-body').classList.contains('joc-spoiler'),
+      'the late detail is shown in full, not re-hidden');
+    d.window.close();
+  }
+
+  console.log('\n7d. F03 — a stale response never replaces the current question');
+  {
+    const slow = gate();
+    const d = await open('/ghici?game=sensuri');
+    const w = d.window, q = s => w.document.querySelector(s), qa = s => [...w.document.querySelectorAll(s)];
+    await waitFor(() => qa('.joc-choice').length === 4);
+    await waitFor(() => q('#panel-pane .fp-title'));
+    let n = 0;
+    // Question 2's detail is held back; question 3's answers at once.
+    w.__detailHook = async () => { n++; return n === 1 ? { word: 'abraș', wait: slow.wait } : { word: 'însul' }; };
+    qa('.joc-choice')[0].click();
+    await waitFor(() => q('#quiz-next'));
+    q('#quiz-next').click();                 // question 2: detail request 1, held
+    await waitFor(() => qa('.joc-choice').length === 4 && !q('#quiz-next') && n === 1);
+    qa('.joc-choice')[0].click();
+    await waitFor(() => q('#quiz-next'));
+    q('#quiz-next').click();                 // question 3: detail request 2, immediate
+    check(await waitFor(() => n === 2 && q('#panel-pane .fp-title')
+        && q('#panel-pane .fp-title').textContent.trim() === 'însul'), 'the current question\'s detail is shown');
+    slow.release();
+    await sleep(400);
+    check(q('#panel-pane .fp-title').textContent.trim() === 'însul',
+      'the stale response for the earlier question did not replace the pane');
+    check(q('#panel-pane .fp-body') && q('#panel-pane .fp-body').hidden,
+      'and the current question\'s body is still withheld');
+    d.window.close();
+  }
+
+  console.log('\n7e. F03 — grilă: a wrong answer compares a structured entry readably');
+  {
+    const d = await open('/ghici?game=grila');
+    const w = d.window, q = s => w.document.querySelector(s), qa = s => [...w.document.querySelectorAll(s)];
+    w.__detailHook = async () => ({ word: 'abraș' });
+    let wrong = false;
+    for (let round = 0; round < 20 && !wrong; round++) {
+      if (q('#quiz-next')) q('#quiz-next').click();
+      if (!await waitFor(() => qa('.joc-choice').length === 4 && !q('#quiz-next'))) break;
+      qa('.joc-choice')[round % 4].click();
+      if (!await waitFor(() => q('#quiz-next'))) break;
+      if (q('#quiz-feedback').className.includes('no')) {
+        wrong = true;
+        check(await waitFor(() => q('#panel-pane .panel-compare-def')), 'the comparison card appears');
+        check(!/fără definiție locală/.test(q('#panel-pane .panel-compare-def').textContent),
+          'the comparison card reads the senses of a structured entry');
+        check(!q('#panel-pane .fp-body').hidden, 'grilă reveals the correct word\'s full body');
+      }
+    }
+    check(wrong, 'a wrong grilă round was reached');
+    d.window.close();
+  }
 
   console.log('\n8. No script errors along the way');
   // Stylesheet fetches are jsdom's own limitation, not the page's.

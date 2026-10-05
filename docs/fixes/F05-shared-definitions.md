@@ -35,3 +35,26 @@ Coordinate answer-body markup with F03.
 ## Boundary
 
 Do not rebuild dictionary data, change scoring, redesign the panel, or add new scraping.
+
+## Answer-body markup contract (agreed with F03)
+
+The quiz page (`public/ghici.php`, sense mode) withholds the answer from the detail pane
+before grading. It does this with one wrapper, not with a list of selectors.
+F05 must keep this contract when it extracts the shared detail loader.
+
+- The wrapper is `<div class="fp-body">` in `public/api/_partials/detail.php`.
+  It is one element. Its class name stays `fp-body`.
+- Inside `.fp-body` (answer-bearing): the spelling, variant and action-noun notes;
+  the flat definition or `fp-nodef`; `ol.fp-senses`; `div.fp-extras`; citations;
+  sense and word synonyms and antonyms; tag chips; etymon; the dictionary row (`.fp-dicts`).
+  Any new block that reveals the meaning must go inside it.
+- Outside `.fp-body` (stays visible in the quiz): the close button, the headword
+  (`.fp-title`) and the verdict badge in `.fp-head`, and the annotation controls
+  in `.fp-foot` (`#bookmark-btn`, `#tags-row`, `.fp-btns`).
+- Exception: `.fp-pos-line` stays in `.fp-head`. The quiz withholds it as a second,
+  named element, because the part of speech narrows the options. Keep that class name.
+- The quiz sets `hidden`, `inert` and `aria-hidden="true"` on these two elements.
+  It removes them after grading. It does not change the markup.
+- Direct arrival (SSR) and `api/word.php` must emit the same wrapper.
+- Tests: `tests/test_ghici.js`, section 7b, checks every answer element is inside
+  `.fp-body`. A renderer change that moves answer content out of it fails there.

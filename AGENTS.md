@@ -1730,11 +1730,14 @@ the URL, so history entries would restore nothing.
 
 ### What counts as a spoiler in `sensuri`
 
-The detail pane is **the explorer's own widget**, so it arrives carrying the answer twice:
-`.definition-text` is literally one of the four choices, and `.fp-pos-line` is the one
-people miss — „s.f." beside the headword eliminates every option phrased as a verb, which
-on a four-option round is most of the work. Both, plus the card's own `.joc-pos`, get
-`.joc-spoiler` until the round is decided, then `revealSpoilers()` takes it off.
+The detail pane is **the explorer's own widget**, so everything in its `.fp-body` describes
+the answer: senses, expressions, citations, synonyms, tags, etymon, variant notes. The pane
+withholds `.fp-body` **as one unit** (`hidden` + `inert` + `aria-hidden`), not by selector —
+a per-selector list missed `.fp-senses` when the renderer grew it. `.fp-pos-line` sits in the
+head and is withheld separately: „s.f." beside the headword eliminates every option phrased
+as a verb. The card's own `.joc-pos` is withheld too. All come back on the verdict, right or
+wrong, via `revealSpoilers()`. The markup contract is in `docs/fixes/F05-shared-definitions.md`.
+Each detail request takes a ticket (`paneSeq`); a response for an earlier question is dropped.
 
 **`roundDecided` is a separate flag from `answered`, and it is load-bearing.** `answered`
 goes true when a choice is clicked; `roundDecided` when the verdict is on screen.

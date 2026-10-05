@@ -52,7 +52,7 @@ require_once __DIR__ . '/api/_lib.php';
        definition both narrow four options to one or two. `visibility` rather than
        `display` on the card's POS line would be tidier, but it reserves a row of
        empty space under every headword; the reveal is a class removal either way. */
-    .joc-spoiler { display:none !important; }
+    .joc-spoiler, #panel-pane [hidden] { display:none !important; }
 
     .joc-choices { display:flex; flex-direction:column; gap:10px; margin-top:22px; }
 
@@ -425,20 +425,44 @@ require_once __DIR__ . '/api/_lib.php';
     // ── Spoilers in the pane, and what counts as one ──────────────────────────
     // In 'sense' mode the word is on screen from the start, so the pane can be
     // filled immediately — but the pane is the *same widget as the explorer's*, and
-    // it carries the answer twice over. `.definition-text` is literally one of the
-    // four choices. `.fp-pos-line` is subtler and was the one being missed: „s.f."
-    // beside the headword eliminates every choice whose definition is a verb, which
-    // is most of a four-option round. Both are hidden until the round is decided,
-    // then revealed by `revealSpoilers()` — hidden rather than stripped, so the
-    // reveal is a class change and the markup stays the server's.
-    var SPOILER_SEL = '.definition-text, .fp-nodef, .fp-pos-line, .joc-pos';
+    // everything in it describes the answer: senses, expressions, citations,
+    // synonyms, tags, etymon, variant notes, the dictionary row. Listing those by
+    // selector broke every time the renderer grew a block (`.fp-senses` was missed
+    // that way), so the pane's answer body is withheld AS ONE UNIT: the `.fp-body`
+    // wrapper from detail.php. The part of speech sits in the head, outside it, and
+    // is withheld separately: „s.f." beside the headword eliminates every option
+    // phrased as a verb. The headword and the marks stay.
+    // Contract with the renderer: docs/fixes/F05-shared-definitions.md.
+    //
+    // `hidden` + `inert` + `aria-hidden`, not only a CSS mask: the content has to be
+    // absent from the accessibility tree and the tab order, not just invisible.
+    // The reveal removes the attributes; the markup stays the server's.
+    var SPOILER_SEL = '.fp-body, .fp-pos-line';
 
+    function setWithheld(el, on) {
+      if (on) {
+        el.classList.add('joc-spoiler');
+        el.hidden = true;
+        el.setAttribute('inert', '');
+        el.setAttribute('aria-hidden', 'true');
+      } else {
+        el.classList.remove('joc-spoiler');
+        el.hidden = false;
+        el.removeAttribute('inert');
+        el.removeAttribute('aria-hidden');
+      }
+    }
     function hideSpoilers(root) {
-      root.querySelectorAll(SPOILER_SEL).forEach(function(el) { el.classList.add('joc-spoiler'); });
+      root.querySelectorAll(SPOILER_SEL).forEach(function(el) { setWithheld(el, true); });
     }
     function revealSpoilers() {
-      document.querySelectorAll('.joc-spoiler').forEach(function(el) { el.classList.remove('joc-spoiler'); });
+      document.querySelectorAll('.joc-spoiler').forEach(function(el) { setWithheld(el, false); });
     }
+
+    // Each detail request takes a ticket. A response only lands if its ticket is still
+    // the newest: otherwise a slow answer for question N would overwrite question N+1's
+    // pane, and — worse — arrive after N+1's own response and replace the right word.
+    var paneSeq = 0;
 
     // The marks are the reason to keep the pane open while playing, and in the
     // server's order they sit below the definition, the chips, the synonyms and the
@@ -457,16 +481,18 @@ require_once __DIR__ . '/api/_lib.php';
     function showWordDetail(word, spoilers) {
       if (!word) return;
       var pane = document.getElementById('panel-pane');
+      var seq = ++paneSeq;
       pane.innerHTML = '<p class="panel-placeholder">se încarcă…</p>';
       fetch(base + '/api/word.php?word=' + encodeURIComponent(word), { credentials: 'same-origin' })
         .then(function(r) { return r.text(); })
         .then(function(html) {
+          if (seq !== paneSeq) return;
           pane.innerHTML = html;
           if (spoilers && !roundDecided) hideSpoilers(pane);
           liftMarks(pane);
           hydrateDetail(pane);
         })
-        .catch(function() { pane.innerHTML = '<p class="panel-placeholder">Nu am putut încărca detaliile.</p>'; });
+        .catch(function() { if (seq === paneSeq) pane.innerHTML = '<p class="panel-placeholder">Nu am putut încărca detaliile.</p>'; });
     }
     // Pull just the title + definition out of a word.php fragment, for the read-only
     // "you picked X" comparison card — the wrong choice gets no bookmark/tags/notes of
@@ -477,18 +503,25 @@ require_once __DIR__ . '/api/_lib.php';
       tmp.innerHTML = html;
       var title = tmp.querySelector('.fp-title');
       var def   = tmp.querySelector('.definition-text');
-      return { word: title ? title.textContent : '', definition: def ? def.textContent : '(fără definiție locală)' };
+      // A structured entry has no `.definition-text`: its meaning is the sense list.
+      // Numbered senses with no text of their own (synonym-only) are skipped.
+      var texts = [].map.call(tmp.querySelectorAll('.fp-senses > .fp-sense > .sense-text'),
+        function(n) { return n.textContent.trim(); }).filter(Boolean).slice(0, 3);
+      var text = def ? def.textContent : (texts.length ? texts.join(' · ') : '(fără definiție locală)');
+      return { word: title ? title.textContent : '', definition: text };
     }
     // Wrong 'quiz' answer: show the correct word's full widget plus a lightweight
     // comparison card for the word the player actually picked, so both definitions are
     // visible side by side.
     function showWordDetailCompare(correctWord, wrongWord) {
       var pane = document.getElementById('panel-pane');
+      var seq = ++paneSeq;
       pane.innerHTML = '<p class="panel-placeholder">se încarcă…</p>';
       Promise.all([
         fetch(base + '/api/word.php?word=' + encodeURIComponent(correctWord), { credentials: 'same-origin' }).then(function(r) { return r.text(); }),
         fetch(base + '/api/word.php?word=' + encodeURIComponent(wrongWord), { credentials: 'same-origin' }).then(function(r) { return r.text(); })
       ]).then(function(results) {
+        if (seq !== paneSeq) return;
         var wrongSummary = extractWordSummary(results[1]);
         pane.innerHTML = results[0] +
           '<div class="panel-compare">' +
@@ -497,7 +530,7 @@ require_once __DIR__ . '/api/_lib.php';
           '</div>';
         liftMarks(pane);
         hydrateDetail(pane);
-      }).catch(function() { pane.innerHTML = '<p class="panel-placeholder">Nu am putut încărca detaliile.</p>'; });
+      }).catch(function() { if (seq === paneSeq) pane.innerHTML = '<p class="panel-placeholder">Nu am putut încărca detaliile.</p>'; });
     }
     // detail.php's markup still carries a "✕" close button (hidden here via CSS,
     // since there's nothing to close) that calls this by name — keep it a harmless
@@ -535,6 +568,7 @@ require_once __DIR__ . '/api/_lib.php';
 
     function load() {
       cancelAutoNext();
+      paneSeq++;          // any detail request still in flight belongs to the old question
       answered = false;
       roundDecided = false;
       askedAt = 0;

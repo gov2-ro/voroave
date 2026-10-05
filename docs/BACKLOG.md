@@ -27,7 +27,7 @@ An old note is not a current measurement. Do not duplicate the same task in seve
   Also acknowledge only accepted changes: `sync.php` truncates requests at 5,000,
   while the client clears its entire snapshot and ignores `rejected`.
 
-- [ ] **P1: The sense quiz exposes answers in structured definitions.** [Implementation brief](fixes/F03-quiz-spoilers.md). Confirmed
+- [x] **P1: The sense quiz exposes answers in structured definitions.** (fixed locally 2026-10-05, F03; not deployed) [Implementation brief](fixes/F03-quiz-spoilers.md). Confirmed
   on the live desktop and mobile pages before answering. `ghici.php:434` masks
   `.definition-text`, but `detail.php` now renders `.fp-senses` and `.fp-extras`.
   These blocks, citations, and synonym hints remain visible. Extend the spoiler

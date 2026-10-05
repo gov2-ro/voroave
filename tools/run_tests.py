@@ -86,6 +86,8 @@ SUITES = [
     Suite("js senses (browser)", "js", "tests/test_senses.js", "built",
           ("ui_db", "browser", "sqlite3"), 300),
     Suite("js ghici (jsdom)", "js", "tests/test_ghici.js", "built", ("ui_db", "jsdom"), 300),
+    Suite("js ghici spoilers (browser)", "js", "tests/test_ghici_browser.js", "built",
+          ("ui_db", "browser"), 300),
     Suite("js dict tooltip (browser)", "js", "tests/test_dict_tooltip.js", "built",
           ("ui_db", "browser"), 300),
     Suite("js footer metrics (browser)", "js", "tests/test_footer_metrics.js", "built",
