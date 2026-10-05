@@ -69,6 +69,7 @@ SUITES = [
     Suite("python (pytest tests)", "py", "tests", "none", (), 600),
     Suite("js sync (synthetic ui.db)", "js", "tests/test_store_sync.js", "synthetic", (), 120,
           (("OTIOS_SYNC_WORDS", ",".join(SYNC_WORDS)),)),
+    Suite("js sync races (unit, VM)", "js", "tests/test_store_sync_race.js", "synthetic", (), 120),
     Suite("js lists api", "js", "tests/test_lists_api.js", "built", ("ui_db",)),
     Suite("js game api", "js", "tests/test_game_api.js", "built", ("ui_db",)),
     Suite("js moderation (admin)", "js", "tests/test_moderation.js", "built", ("ui_db",)),

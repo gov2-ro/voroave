@@ -1,6 +1,7 @@
 # F02 — Preserve and acknowledge annotation edits correctly
 
-Status: open. Priority: P1.
+Status: complete locally (2026-10-05); live verification needs the owner's deploy. Priority: P1.
+Protocol: [docs/sync-protocol.md](../sync-protocol.md).
 
 ## Evidence and target
 

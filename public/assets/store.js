@@ -10,8 +10,13 @@
 // load, so a server outage costs nothing but freshness.
 
 var STORE_KEY = 'otios.research';   // { version, words: { word: {bookmarked, note, tags, updated_at} } }
-var QUEUE_KEY = 'otios.pending';    // { word: "<iso8601 marked-dirty time>" }
+var QUEUE_KEY = 'otios.pending';    // { word: { rev, ts, rejected? } }  (legacy: { word: "<iso8601>" })
 var SYNC_KEY  = 'otios.sync';       // { since: <server seq>, migrated }
+var REV_KEY   = 'otios.rev';        // last local revision handed out (never reused)
+
+// Largest batch one request carries. The server reads at most 5,000 changes per call
+// (SYNC_PAGE in api/sync.php); staying lower keeps request bodies small.
+var SYNC_BATCH = 1000;
 
 var syncInFlight = false;
 var syncTimer    = null;
@@ -43,10 +48,23 @@ function getWord(word) {
   return getResearch().words[word] || { bookmarked: false, note: '', tags: [] };
 }
 
+// A change must carry an updated_at later than anything already queued or stored for
+// the word. The server keeps a row only when excluded.updated_at > stored.updated_at,
+// so two edits in one millisecond would otherwise tie and the second would be dropped.
+function nextTimestamp(word, prevUpdatedAt) {
+  var ts = nowIso();
+  var q = getQueue();
+  var floor = prevUpdatedAt || '';
+  if (q[word] && q[word].ts > floor) floor = q[word].ts;
+  if (floor && ts <= floor) ts = new Date(Date.parse(floor) + 1).toISOString();
+  return ts;
+}
+
 function updateWord(word, patch) {
   var r = getResearch();
   var prev = r.words[word] || { bookmarked: false, note: '', tags: [] };
-  var next = Object.assign({}, prev, patch, { updated_at: nowIso() });
+  var ts = nextTimestamp(word, prev.updated_at);
+  var next = Object.assign({}, prev, patch, { updated_at: ts });
   // prune empty entries
   if (!next.bookmarked && !next.note && (!next.tags || next.tags.length === 0)) {
     delete r.words[word];
@@ -54,7 +72,7 @@ function updateWord(word, patch) {
     r.words[word] = next;
   }
   saveResearch(r);
-  markDirty(word);
+  markDirty(word, ts);   // for a pruned word, ts is the tombstone's time
 }
 
 // ── Word-detail panel ────────────────────────────────────────────────────────────
@@ -313,18 +331,69 @@ if (typeof document !== 'undefined' && document.body) {
 
 // ── Outbound queue ────────────────────────────────────────────────────────────
 //
-// The queue holds only the set of touched words, not an event log: the payload is
-// rebuilt from current local state at push time. Repeated edits to one word collapse
-// into a single change, and a replayed push is idempotent.
+// The queue holds one entry per touched word: { rev, ts, rejected? }. The payload is
+// rebuilt from current local state at push time, so repeated edits to one word collapse
+// into a single change and a replayed push is idempotent.
+//
+// `rev` is a local revision number from one counter that only grows (REV_KEY). Every
+// edit gets a new rev. A push remembers the rev it sent for each word, and the reply may
+// clear a word only when the server acknowledged that rev AND the queue still holds the
+// same rev. An edit made during the request has a newer rev, so it stays queued.
+// `ts` is the change's updated_at; for a deleted word it is the tombstone's time.
+// `rejected` ('invalid' | 'quota') marks a word the server refused for good: its data
+// stays local and the entry is not pushed again until the word is edited.
+// Protocol and compatibility: docs/sync-protocol.md.
 
-function getQueue() { return readJson(QUEUE_KEY, {}) || {}; }
+function nextRev(floor) {
+  var n = Number(readJson(REV_KEY, 0)) || 0;
+  if (floor && floor > n) n = floor;
+  n += 1;
+  writeJson(REV_KEY, n);
+  return n;
+}
+
+function getQueue() {
+  var raw = readJson(QUEUE_KEY, {}) || {};
+  var q = {};
+  Object.keys(raw).forEach(function (w) {
+    var e = raw[w];
+    if (typeof e === 'string') q[w] = { rev: 0, ts: e };        // legacy entry: rev 0 is older than any new edit
+    else if (e && typeof e === 'object') q[w] = e;
+  });
+  return q;
+}
 function saveQueue(q) { writeJson(QUEUE_KEY, q); }
 
-function markDirty(word) {
+function markDirty(word, ts) {
   var q = getQueue();
-  q[word] = nowIso();
+  q[word] = { rev: nextRev(q[word] && q[word].rev), ts: ts || nowIso() };
   saveQueue(q);
   scheduleSync();
+}
+
+// Words that still need a push, oldest revision first.
+function pendingWords(q) {
+  return Object.keys(q).filter(function (w) { return !q[w].rejected; }).sort(function (a, b) {
+    return (q[a].rev - q[b].rev) || (a < b ? -1 : a > b ? 1 : 0);
+  });
+}
+
+function getRejected() {
+  var q = getQueue(), out = {};
+  Object.keys(q).forEach(function (w) { if (q[w].rejected) out[w] = q[w].rejected; });
+  return out;
+}
+
+// The visible signal: a count on <html> that a skin or the page can show, plus an event.
+function updateRejectedSignal(announce) {
+  var rejected = Object.keys(getRejected());
+  if (typeof document !== 'undefined' && document.documentElement) {
+    if (rejected.length) document.documentElement.setAttribute('data-sync-rejected', String(rejected.length));
+    else document.documentElement.removeAttribute('data-sync-rejected');
+  }
+  if (announce && rejected.length && typeof document !== 'undefined') {
+    document.dispatchEvent(new CustomEvent('otios:sync-rejected', { detail: { words: rejected } }));
+  }
 }
 
 function getSyncState() { return readJson(SYNC_KEY, {}) || {}; }
@@ -340,7 +409,7 @@ function migrateLocalStore() {
   var words = getResearch().words;
   var q = getQueue();
   Object.keys(words).forEach(function (w) {
-    if (!q[w]) q[w] = words[w].updated_at || nowIso();
+    if (!q[w]) q[w] = { rev: nextRev(), ts: words[w].updated_at || nowIso() };
   });
   saveQueue(q);
 
@@ -350,35 +419,40 @@ function migrateLocalStore() {
 
 // ── Sync ──────────────────────────────────────────────────────────────────────
 
-function buildChanges(queue) {
-  var words = getResearch().words;
-  return Object.keys(queue).map(function (w) {
-    var e = words[w];
+function buildChanges(queue, words) {
+  var local = getResearch().words;
+  return (words || Object.keys(queue)).map(function (w) {
+    var e = local[w];
     if (!e) {
       // Pruned locally (unbookmarked, note cleared, tags removed) — send a tombstone
       // so the deletion reaches the user's other devices instead of being resurrected.
-      return { word: w, bookmarked: false, note: '', tags: [], updated_at: queue[w], deleted: true };
+      return { word: w, rev: queue[w].rev, bookmarked: false, note: '', tags: [], updated_at: queue[w].ts, deleted: true };
     }
     return {
       word:       w,
+      rev:        queue[w].rev,
       bookmarked: !!e.bookmarked,
       note:       e.note || '',
       tags:       e.tags || [],
-      updated_at: e.updated_at || queue[w],
+      updated_at: e.updated_at || queue[w].ts,
       deleted:    false
     };
   });
 }
 
-function applyRemote(changes) {
+function applyRemote(changes, queueBefore) {
   if (!changes || !changes.length) return false;
   var r = getResearch();
+  var q = queueBefore || getQueue();
   var touched = false;
 
   changes.forEach(function (c) {
     var local = r.words[c.word];
     // Local edit is newer — keep it; our own copy will win on the next push.
     if (local && local.updated_at && local.updated_at >= c.updated_at) return;
+    // A queued local delete has no row to compare against, so compare with the queued
+    // tombstone's time. Without this an older remote copy would bring the word back.
+    if (!local && q[c.word] && q[c.word].ts >= c.updated_at) return;
 
     if (c.deleted) {
       if (local) { delete r.words[c.word]; touched = true; }
@@ -402,38 +476,80 @@ function scheduleSync(delay) {
   syncTimer = setTimeout(function () { syncNow(); }, delay == null ? 1500 : delay);
 }
 
+// Work out what the server said about each change we sent. Returns { word: status }
+// where status is stored | current | invalid | quota | unacked.
+function ackStatuses(data, sent) {
+  var res = {};
+  if (Array.isArray(data.outcomes)) {
+    Object.keys(sent).forEach(function (w) { res[w] = 'unacked'; });
+    data.outcomes.forEach(function (o) {
+      if (!o || typeof o.word !== 'string' || !(o.word in sent) || o.rev !== sent[o.word]) return;
+      res[o.word] = (o.status === 'stored' || o.status === 'current' || o.status === 'invalid' || o.status === 'quota')
+        ? o.status : 'unacked';
+    });
+  } else {
+    // Old server: no per-change outcomes. `rejected: 0` means it took every change in
+    // the request (it also read at most 5,000, and we send fewer). Anything else cannot
+    // be attributed to a word, so nothing is acknowledged.
+    Object.keys(sent).forEach(function (w) { res[w] = data.rejected === 0 ? 'stored' : 'unacked'; });
+  }
+  return res;
+}
+
 function syncNow() {
   if (syncInFlight) return Promise.resolve(false);
   var base = (typeof OTIOS_BASE !== 'undefined' ? OTIOS_BASE : '');
 
-  var queue    = getQueue();
-  var snapshot = Object.keys(queue);
-  var state    = getSyncState();
+  var queue = getQueue();
+  var batch = pendingWords(queue).slice(0, SYNC_BATCH);
+  var sent  = {};                       // word -> rev that this request carries
+  batch.forEach(function (w) { sent[w] = queue[w].rev; });
+  var state = getSyncState();
 
   syncInFlight = true;
   return fetch(base + '/api/sync.php', {
     method:      'POST',
     credentials: 'same-origin',
     headers:     { 'Content-Type': 'application/json' },
-    body:        JSON.stringify({ since: state.since || 0, changes: buildChanges(queue) })
+    body:        JSON.stringify({ since: state.since || 0, changes: buildChanges(queue, batch) })
   })
     .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('sync ' + r.status)); })
     .then(function (data) {
-      // Drop only what we actually sent: edits made while the request was in flight
-      // must survive for the next push.
-      var q = getQueue();
-      snapshot.forEach(function (w) { delete q[w]; });
-      saveQueue(q);
+      // Check the reply before touching any state: a bad reply must change nothing.
+      if (!data || typeof data !== 'object' || !Array.isArray(data.changes) ||
+          typeof data.server_seq !== 'number' || !isFinite(data.server_seq)) {
+        throw new Error('sync: malformed reply');
+      }
 
-      var changed = applyRemote(data.changes);
+      // Clear a word only when its sent revision was acknowledged and is still the
+      // current one. A newer revision (an edit during the request) stays queued.
+      var status = ackStatuses(data, sent);
+      var q = getQueue();
+      var queueBefore = JSON.parse(JSON.stringify(q));
+      var progress = false, newlyRejected = false;
+      Object.keys(sent).forEach(function (w) {
+        var st = status[w];
+        if (!q[w] || q[w].rev !== sent[w]) return;
+        if (st === 'stored' || st === 'current') { delete q[w]; progress = true; }
+        else if (st === 'invalid' || st === 'quota') { q[w].rejected = st; progress = true; newlyRejected = true; }
+      });
+      saveQueue(q);
+      if (newlyRejected) updateRejectedSignal(true);
+
+      var changed = applyRemote(data.changes, queueBefore);
       var s = getSyncState();
+      var moved = data.server_seq !== (s.since || 0);
       s.since = data.server_seq;
       saveSyncState(s);
 
       if (changed) {
         document.dispatchEvent(new CustomEvent('otios:synced', { detail: { changed: true } }));
       }
-      if (data.has_more) scheduleSync(200);
+      // Next batch: more of our own changes, or more server rows. Only when this round
+      // made progress, so a server that acknowledges nothing cannot start a loop.
+      var morePush = pendingWords(getQueue()).length > 0 && progress;
+      var morePull = !!data.has_more && (data.changes.length > 0 || moved);
+      if (morePush || morePull) scheduleSync(200);
       return changed;
     })
     .catch(function () { return false; })   // stay queued, retry on next change or load
@@ -449,8 +565,9 @@ function otiosMe() {
 
 // Push anything still queued when the page goes away (tab close, navigation).
 document.addEventListener('visibilitychange', function () {
-  if (document.visibilityState === 'hidden' && Object.keys(getQueue()).length) syncNow();
+  if (document.visibilityState === 'hidden' && pendingWords(getQueue()).length) syncNow();
 });
 
 migrateLocalStore();
+updateRejectedSignal(false);
 scheduleSync(300);

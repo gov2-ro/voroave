@@ -2,6 +2,30 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F02 sync: revision queue and per-word acknowledgements
+
+Local fix and tests. Not deployed. Live verification is open until the owner deploys.
+
+Reproduction: `tests/test_store_sync_race.js` was written first and run against the old `store.js`.
+Result: `FAIL second revision is still queued after the first ack`, then a TypeError in the
+same-millisecond test because the queue was empty. Saved output: scratchpad `f02-before.txt`.
+
+Changes: per-edit revision counter (`otios.rev`), queue entries `{rev, ts, rejected?}`, strictly increasing
+`updated_at` per word, ack only of a still-current acknowledged revision, batches of 1,000, malformed-reply
+checks before any state change, queued tombstones block older remote rows, `sync.php` returns
+`outcomes` (stored/current/invalid/quota/deferred), counts `applied` by `rowCount()`, tracks the quota
+through a batch and accepts deletions at the cap. Rejected entries keep their data and signal through
+`data-sync-rejected`, `otios:sync-rejected` and `getRejected()`. Protocol and deploy compatibility:
+`docs/sync-protocol.md`.
+
+Validation (local, isolated temp OTIOS_PRIVATE_DIR): `python3 tools/run_tests.py` gives 18/19 suites passed.
+New suite `js sync races (unit, VM)` has 45 checks. `js sync (synthetic ui.db)` has 26 checks (9 new:
+outcomes, no-op, 5,001-change overflow, rejected word). The one failure is `js ghici (jsdom)`, owned by F03.
+
+Skipped: a quota-rejection test against the real endpoint (the cap is 20,000 words; covered by code reading only).
+Not tested: old client against new server in a real browser (reasoned from the code; see the doc).
+Limits: no automatic backoff after a transient failure; the retry is the next edit, load or tab hide.
+
 ## 2026-10-05 — F01 synonym outage: diagnosis and failure handling
 
 Local fix only. The live outage stays open until the owner deploys and verifies.

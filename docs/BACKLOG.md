@@ -19,7 +19,7 @@ An old note is not a current measurement. Do not duplicate the same task in seve
   permissions, and deployed PHP capabilities. The root cause is not yet established.
   Add a production smoke check that searches a word; testing the landing page misses this.
 
-- [ ] **P1: Sync drops newer edits made during an earlier push.** [Implementation brief](fixes/F02-sync.md). Reproduced with
+- [x] **P1: Sync drops newer edits made during an earlier push.** *Local fix done 2026-10-05 (revision queue, per-word outcomes, batching; see `docs/sync-protocol.md`); not yet deployed.* [Implementation brief](fixes/F02-sync.md). Reproduced with
   the real `store.js` in a VM and a delayed response. Edit `zapciu`, start `syncNow()`,
   edit it again, then resolve the first request. The pending queue becomes empty,
   although the newer note was never sent. `store.js:425` deletes snapshot keys without

@@ -5,7 +5,12 @@ require_once __DIR__ . '/_auth.php';
 // Two-way delta sync of the research store (bookmarks / notes / tags), in one call:
 //
 //   POST { since: <int seq>, changes: [{word, bookmarked, note, tags[], updated_at, deleted}] }
-//    →   { server_seq, server_time, changes: [...], applied, rejected, has_more }
+//    →   { server_seq, server_time, changes: [...], applied, rejected, unchanged,
+//          outcomes: [{word, rev, status}], has_more }
+//
+// Each pushed change carries a client `rev`; `outcomes` echoes it with a per-change
+// status so the client clears only what the server really took. The protocol is
+// documented in docs/sync-protocol.md.
 //
 // The delta cursor is `seq`, a per-user monotonic counter — not a timestamp. PHP has
 // no sub-second clock resolution here, so a timestamp cursor would silently skip any
@@ -59,6 +64,15 @@ function clean_ts(mixed $raw): string {
 $pdo      = app_db();
 $applied  = 0;
 $rejected = 0;
+$unchanged = 0;
+// One outcome per submitted change, in submission order. The client matches them by
+// (word, rev) and clears only what it finds acknowledged. See docs/sync-protocol.md.
+//   stored    the row was written (it beat the stored updated_at)
+//   current   valid, but the server already holds the same or a newer updated_at: no-op
+//   invalid   unknown word or malformed entry; retrying cannot help
+//   quota     a new live word while the user is at MAX_WORDS_PER_USER
+//   deferred  beyond the SYNC_PAGE slice; not processed, the client keeps it queued
+$outcomes = [];
 
 if ($changes !== []) {
     $incoming = array_values(array_filter(array_map(
@@ -67,20 +81,19 @@ if ($changes !== []) {
     )));
     $valid = filter_existing_words($incoming);
 
-    // Soft quota: once a user is at the cap, existing words can still be edited but
-    // no new ones are accepted.
+    // Soft quota: at the cap, existing live words can still be edited and any word can
+    // be deleted, but no new live word is accepted. The live count is tracked through
+    // the batch so one request cannot overshoot the cap.
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM annotations WHERE user_id = ? AND deleted = 0');
     $stmt->execute([$user_id]);
-    $at_cap = (int) $stmt->fetchColumn() >= MAX_WORDS_PER_USER;
+    $live = (int) $stmt->fetchColumn();
 
-    $present = [];
-    if ($at_cap && $incoming !== []) {
-        foreach (array_chunk($incoming, 400) as $chunk) {
-            $ph = implode(',', array_fill(0, count($chunk), '?'));
-            $st = $pdo->prepare("SELECT word FROM annotations WHERE user_id = ? AND word IN ($ph)");
-            $st->execute(array_merge([$user_id], $chunk));
-            foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $w) { $present[$w] = true; }
-        }
+    $state = [];   // word => deleted flag (0/1) for rows the server already has
+    foreach (array_chunk(array_values(array_unique($incoming)), 400) as $chunk) {
+        $ph = implode(',', array_fill(0, count($chunk), '?'));
+        $st = $pdo->prepare("SELECT word, deleted FROM annotations WHERE user_id = ? AND word IN ($ph)");
+        $st->execute(array_merge([$user_id], $chunk));
+        foreach ($st->fetchAll() as $row) { $state[$row['word']] = (int) $row['deleted']; }
     }
 
     $upsert = $pdo->prepare(
@@ -106,8 +119,21 @@ if ($changes !== []) {
 
         foreach ($changes as $c) {
             $word = is_array($c) && is_string($c['word'] ?? null) ? $c['word'] : '';
-            if ($word === '' || !isset($valid[$word]) || ($at_cap && !isset($present[$word]))) {
+            $rev  = is_array($c) && isset($c['rev']) && is_int($c['rev']) ? $c['rev'] : null;
+            $out  = ['word' => $word, 'rev' => $rev, 'status' => 'invalid'];
+
+            if ($word === '' || !isset($valid[$word])) {
                 $rejected++;
+                $outcomes[] = $out;
+                continue;
+            }
+
+            $deleting = !empty($c['deleted']);
+            $was_live = isset($state[$word]) && $state[$word] === 0;
+            if (!$deleting && !$was_live && $live >= MAX_WORDS_PER_USER) {
+                $rejected++;
+                $out['status'] = 'quota';
+                $outcomes[] = $out;
                 continue;
             }
 
@@ -127,16 +153,38 @@ if ($changes !== []) {
                 ':note' => mb_substr(is_string($c['note'] ?? null) ? $c['note'] : '', 0, MAX_NOTE_LEN),
                 ':tags' => json_encode(array_values(array_unique($tags)), JSON_UNESCAPED_UNICODE),
                 ':ts'   => clean_ts($c['updated_at'] ?? null),
-                ':seq'  => ++$seq,
-                ':del'  => !empty($c['deleted']) ? 1 : 0,
+                ':seq'  => $seq + 1,
+                ':del'  => $deleting ? 1 : 0,
             ]);
-            $applied++;
+
+            // rowCount() is 0 when the WHERE clause refused the update. That is a
+            // no-op, not a new write, so it must not count as applied.
+            if ($upsert->rowCount() > 0) {
+                $seq++;
+                $applied++;
+                $live += ($deleting ? 0 : 1) - ($was_live ? 1 : 0);
+                $state[$word] = $deleting ? 1 : 0;
+                $out['status'] = 'stored';
+            } else {
+                $unchanged++;
+                $out['status'] = 'current';
+            }
+            $outcomes[] = $out;
         }
         $pdo->commit();
     } catch (Throwable $e) {
         $pdo->rollBack();
         throw $e;
     }
+}
+
+// Changes beyond the slice were not read. Say so, so the client keeps them queued.
+foreach (array_slice($in['changes'] ?? [], SYNC_PAGE) as $c) {
+    $outcomes[] = [
+        'word'   => is_array($c) && is_string($c['word'] ?? null) ? $c['word'] : '',
+        'rev'    => is_array($c) && isset($c['rev']) && is_int($c['rev']) ? $c['rev'] : null,
+        'status' => 'deferred',
+    ];
 }
 
 // Pull everything the server has learned since the client last asked. This echoes
@@ -175,5 +223,7 @@ json_out([
     'changes'     => $out,
     'applied'     => $applied,
     'rejected'    => $rejected,
+    'unchanged'   => $unchanged,
+    'outcomes'    => $outcomes,
     'has_more'    => $has_more,
 ]);

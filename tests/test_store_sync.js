@@ -154,6 +154,48 @@ const check = (ok, msg) => { if (!ok) failures++; say(ok, msg); };
   check(!!JSON.parse(offline.ls['otios.research']).words[W1], 'local write landed despite outage');
   check(Object.keys(JSON.parse(offline.ls['otios.pending'])).length === 1, 'change stayed queued for retry');
 
+  console.log('\n7. Per-change outcomes from the real server (docs/sync-protocol.md)');
+  const post = async (changes, since = 0) => {
+    const r = await jar.fetch(`${BASE}/api/sync.php`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ since, changes }),
+    });
+    return r.json();
+  };
+  const T0 = Date.now() + 1000;                       // later than anything above, within the 60 s clamp
+  const iso = (n) => new Date(T0 + n).toISOString();
+  const mk = (word, rev, ts, extra = {}) =>
+    Object.assign({ word, rev, bookmarked: true, note: 'o', tags: [], updated_at: iso(ts), deleted: false }, extra);
+  let out = await post([mk(W1, 11, 10), mk('cuvant-inexistent-xyz', 12, 10)]);
+  const byRev = (o, rev) => (o.outcomes || []).find((x) => x.rev === rev);
+  check(byRev(out, 11) && byRev(out, 11).status === 'stored' && byRev(out, 11).word === W1, 'new revision is "stored"');
+  check(byRev(out, 12) && byRev(out, 12).status === 'invalid', 'unknown word is "invalid"');
+  check(out.applied === 1 && out.rejected === 1, 'applied / rejected counters match the outcomes');
+  out = await post([mk(W1, 13, 10)]);                  // same updated_at: the server already has it
+  check(byRev(out, 13).status === 'current' && out.applied === 0 && out.unchanged === 1,
+        'a database no-op is "current", not applied');
+  out = await post([mk(W1, 14, 5)]);                   // older
+  check(byRev(out, 14).status === 'current', 'an older change is "current"');
+  out = await post([mk(W1, 15, 20, { note: 'unu' }), mk(W1, 16, 21, { note: 'doi' })]);
+  check(byRev(out, 15).status === 'stored' && byRev(out, 16).status === 'stored', 'two changes to one word in one request both report');
+
+  console.log('\n8. A request over the 5,000 slice reports the overflow as deferred');
+  const many = [];
+  for (let i = 0; i < 5001; i++) many.push(mk(W2, 100 + i, 30 + i));
+  out = await post(many);
+  check(out.outcomes.length === 5001, 'one outcome per submitted change');
+  check(out.outcomes[5000].status === 'deferred' && out.outcomes[4999].status === 'stored',
+        'the 5,001st change is "deferred", the 5,000th is processed');
+
+  console.log('\n9. Client keeps a rejected word and stops retrying it');
+  const rj = boot({}, jar);
+  rj.ctx.updateWord('cuvant-inexistent-xyz', { note: 'nu exista' });
+  await rj.ctx.syncNow();
+  const rq = JSON.parse(rj.ls['otios.pending']);
+  check(rq['cuvant-inexistent-xyz'] && rq['cuvant-inexistent-xyz'].rejected === 'invalid',
+        'the entry is marked rejected, not cleared');
+  check(!!JSON.parse(rj.ls['otios.research']).words['cuvant-inexistent-xyz'], 'its local data is kept');
+
   console.log(failures ? `\n${failures} FAILED\n` : '\nAll checks passed\n');
   process.exit(failures ? 1 : 0);
 })();
