@@ -406,12 +406,54 @@ def draw_spotcheck(rows: list[dict], n: int, seed: str) -> list[dict]:
     return picked
 
 
+PACK_VERSION = 1            # WORD_PACK_VERSION in public/api/_lib.php
+PACK_MAX = 500              # WORD_PACK_MAX in public/api/_lib.php
+SPOT_LINK_PARAMS = "&sort=alpha&editorial=show"
+
+
+def _base36(n: int) -> str:
+    digits = "0123456789abcdefghijklmnopqrstuvwxyz"
+    out = ""
+    while True:
+        n, r = divmod(n, 36)
+        out = digits[r] + out
+        if n == 0:
+            return out
+
+
+def pack_ids(ids: list[int]) -> str:
+    """Same codec as pack_words() in public/api/_lib.php: "1.<base36 id>.<base36 id>"."""
+    ids = list(ids)[:PACK_MAX]
+    return "" if not ids else f"{PACK_VERSION}." + ".".join(_base36(i) for i in ids)
+
+
+def spotcheck_link(packed: str) -> str:
+    """Local playlist path. `sort=alpha` hides the ranking. `editorial=show` stops the
+    curator-demote term in the ORDER BY, which would sink those words to the end."""
+    return f"/?w={packed}{SPOT_LINK_PARAMS}"
+
+
+def load_word_ids(conn: sqlite3.Connection, words: list[str]) -> dict[str, int]:
+    ids: dict[str, int] = {}
+    if "word_id" not in {r[1] for r in conn.execute("PRAGMA table_info(words)")}:
+        return ids
+    for i in range(0, len(words), 400):
+        chunk = words[i:i + 400]
+        q = ",".join("?" * len(chunk))
+        for w, wid in conn.execute(
+                f"SELECT word, word_id FROM words WHERE word IN ({q}) AND word_id IS NOT NULL",
+                chunk):
+            ids[w] = int(wid)
+    return ids
+
+
 def run_spotcheck(ui_db: Path, out_dir: Path, n: int, seed: str) -> dict:
     conn = open_ro(ui_db)
     try:
         rows = load_rows(conn)
         picked = draw_spotcheck(rows, n, seed)
         senses = load_senses(conn, {r["word"] for r in picked})
+        ids = load_word_ids(conn, [r["word"] for r in picked])
     finally:
         conn.close()
     picked.sort(key=lambda r: (h(seed, "order", r["word"]), r["word"]))   # blind order
@@ -430,7 +472,18 @@ def run_spotcheck(ui_db: Path, out_dir: Path, n: int, seed: str) -> dict:
     by_band: dict[str, int] = defaultdict(int)
     for r in picked:
         by_band[r["score_band"]] += 1
-    return {"n": len(picked), "by_score_band": dict(sorted(by_band.items()))}
+    summary = {"n": len(picked), "by_score_band": dict(sorted(by_band.items()))}
+    names = sorted(r["word"] for r in picked)
+    if len(picked) > PACK_MAX:
+        summary["link"] = f"none: the sample has more than {PACK_MAX} words"
+    elif any(w not in ids for w in names):
+        missing = [w for w in names if w not in ids]
+        summary["link"] = f"none: no word_id in ui.db for {missing[:5]}"
+    else:
+        link = spotcheck_link(pack_ids([ids[w] for w in names]))
+        (out_dir / "spotcheck_link.txt").write_text(link + "\n", encoding="utf-8")
+        summary["link"] = link
+    return summary
 
 
 def main(argv=None) -> int:

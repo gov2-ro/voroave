@@ -2,6 +2,30 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F09 Stage 0: mark in the web UI
+
+Owner decision: mark the spot-check in the existing UI as custom tags, not in the TSV.
+`tools/eval_sample.py --spotcheck` now also writes `data/eval/spotcheck_link.txt`: `/?w=<packed ids>&sort=alpha&editorial=show`.
+Ids come from `ui.db` `words.word_id` (read-only). `pack_ids()` copies the codec of `pack_words()` in `_lib.php`.
+`editorial=show` is needed: otherwise `demote_order_sql()` sinks curator-demoted words to the end, even under `sort=alpha`.
+The sample is unchanged: a rerun into a temp directory gave a byte-identical `spotcheck_key.csv` and `spotcheck_marks.tsv`.
+`tools/eval_spotcheck.py` gained `--from-appdb [--appdb] [--user N ...]` and `--from-tsv-export FILE`.
+It reads `sc-bun|sc-meh|sc-slab` (+ `-q` for unsure) from `annotations` with `mode=ro` (WAL honoured), skips deleted rows,
+reports per marker, and reports percent agreement and Cohen's kappa per marker pair. Two different marks on one word = conflict, left out.
+New `public/api/_export_spotcheck.php`: CLI-only (404 over HTTP), read-only, prints `user_id, word, tag` for `sc-` tags only.
+**Finding: the detail panel has no tag text box.** It was removed in the quick-tags redesign (see 2026-08 entries).
+The owner's plan ("type the tags in the tag box") cannot work as stated. No change was made to `public/`.
+Added `tools/spotcheck_marker.js` instead: a paste-in console script (keys 1/2/3/0/q) that sets the same custom tags through
+`getWord`/`updateWord`, so they sync to app.db normally. Owner decision needed if a real tag box is wanted.
+Validation (local): `tests/test_eval_spotcheck_ui.py` (synthetic app.db made by the app's own migration in a staged copy;
+sc- only, deleted and fav/lol/meh ignored, WAL, kappa, per-marker report, export script, export-vs-appdb parity, 404 over HTTP,
+codec parity with PHP `pack.php` in both directions, and the 150-word list in alpha order from `api/search.php`).
+Manual, on a staged server with a copy of `ui.db`: the page for the link shows exactly 150 rows in alpha order;
+the marker script wrote tags that synced to the staged app.db and `eval_spotcheck.py --from-appdb` read them.
+`private/app.db` was not opened; mtime and size unchanged (`1791208393 1531904`).
+Limits: the UI is only partly blind (verdict colour and dictionary row show). Alpha order is binary (code point), so `ă` sorts after `z`.
+Live verification: none. Not committed as a suite: the browser check of the marker script.
+
 ## 2026-10-05 — F09 Stage 0 curator spot-check tooling
 
 Owner decision: the site is a curated product. Add a cheap owner-only check before the full F09 study.

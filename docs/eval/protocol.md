@@ -14,14 +14,52 @@ Purpose: a cheap check that the owner can do alone in one afternoon, before and 
 The site is a curated product, not a scientific publication. The owner wants a first, rough answer:
 do the good finds sit near the top of the ranking, or are they spread around?
 
-What the owner does:
+What the owner does (web UI route, recommended):
 
 1. Run `python3 tools/eval_sample.py --spotcheck --n 150`. The seed is `f09-spotcheck-v1`.
-   The script draws about 150 words at random across the whole ranking. It stratifies by seam and score band,
-   so every band is present. It writes `data/eval/spotcheck_marks.tsv` and a hidden `data/eval/spotcheck_key.csv`.
-2. Open the marks file. It has four columns: `item_id`, `word`, `definition`, `mark`. It shows no score, seam, verdict or flag.
-   The row order is a hash shuffle. Do not open the key file.
-3. Fill `mark` for each word: `bun` (a good find), `meh`, or `slab` (a dud).
+   The script draws about 150 words across the whole ranking, stratified by seam and score band.
+   It writes `data/eval/spotcheck_marks.tsv`, a hidden `data/eval/spotcheck_key.csv`,
+   and `data/eval/spotcheck_link.txt`. The link file holds a local playlist path
+   (`/?w=<packed ids>&sort=alpha&editorial=show`). The ids come from `public/data/ui.db`.
+   Do not open the key file.
+2. Start your own dev server: `php -S 127.0.0.1:8011 -t public tools/dev-router.php`.
+   Open `http://127.0.0.1:8011` followed by the text in `spotcheck_link.txt`.
+   The page shows exactly the 150 words, in alphabetical order. The order does not show the ranking.
+   `editorial=show` is part of the link. Without it, curator-demoted words sink to the end of the list.
+3. Mark each word with a custom tag: `sc-bun` (a good find), `sc-meh`, or `sc-slab` (a dud).
+   For an unsure mark, add `-q`: `sc-bun-q`, `sc-meh-q`, `sc-slab-q`. Skip a word to leave it unjudged.
+   Do not use fav, lol or meh for this. Those marks feed `/colectii` and the `populare` sort.
+   The detail panel has no free-text tag box now (removed in the quick-tags redesign).
+   Use `tools/spotcheck_marker.js`: paste the file into the browser console once per page load.
+   It adds keys: `1` = sc-bun, `2` = sc-meh, `3` = sc-slab, `0` = clear, `q` = unsure for the next mark.
+   After a mark, the page moves to the next word.
+4. Run `python3 tools/eval_spotcheck.py --from-appdb`. It reads `private/app.db` read-only.
+   It finds every user who holds an `sc-` tag. Use `--user N` (repeatable) to choose users.
+   It prints one result per marker. With two or more markers it also prints percent agreement
+   and Cohen's kappa on the words both judged.
+
+Rules for the tags of one user on one word:
+two different marks (for example `sc-bun` and `sc-slab`) are a conflict. The word is left out and listed.
+Any `-q` tag makes the mark unsure. Unsure marks stay in the result, as in the TSV route.
+Tags on words outside the sample are ignored. Deleted annotations are ignored.
+
+Other markers on the live site (later): run `php api/_export_spotcheck.php > export.tsv` in the deployed folder.
+The script is CLI-only and read-only. It prints `user_id`, `word` and the `sc-` tag, and nothing else from app.db.
+Copy `export.tsv` to the laptop and run `python3 tools/eval_spotcheck.py --from-tsv-export export.tsv`.
+Each marker needs their own browser, because an anonymous device is one user.
+
+Limits of the UI route:
+
+- It is only partly blind. The list rows show the verdict colour, and the detail panel shows the dictionary row.
+  Both are weak hints of the ranking. This is acceptable for a curated site. Read the result with this in mind.
+- A marker who sees the verdict colour may mark `bun` more often on one verdict. This is a known bias, not removed.
+
+What the owner does (TSV route, still works):
+
+1. Run `python3 tools/eval_sample.py --spotcheck --n 150`.
+2. Open `data/eval/spotcheck_marks.tsv`. It has four columns: `item_id`, `word`, `definition`, `mark`.
+   It shows no score, seam, verdict or flag. The row order is a hash shuffle. Do not open the key file.
+3. Fill `mark` for each word: `bun`, `meh`, or `slab`.
    Add `?` if unsure (`bun?`). Write only `?`, or leave the cell empty, to skip a word.
 4. Run `python3 tools/eval_spotcheck.py`. It prints a one-page result.
 

@@ -1,6 +1,6 @@
 # F09 — Design a small ranking evaluation
 
-Status: protocol ready for owner review; study not run. Stage 0 spot-check tooling ready; not run. Deliverables: [protocol](../eval/protocol.md), `tools/eval_sample.py`, `docs/eval/sample-provenance.json`, `docs/eval/sample-words.tsv`. No scoring change is authorized by this brief.
+Status: protocol ready for owner review; study not run. Stage 0 spot-check tooling ready; not run. Stage 0 can be marked in the web UI (`sc-*` tags, `tools/spotcheck_marker.js`, `eval_spotcheck.py --from-appdb`). Deliverables: [protocol](../eval/protocol.md), `tools/eval_sample.py`, `docs/eval/sample-provenance.json`, `docs/eval/sample-words.tsv`. No scoring change is authorized by this brief.
 
 ## Question and evidence
 
