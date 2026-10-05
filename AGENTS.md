@@ -8,8 +8,8 @@ Start with `readme.md` and `docs/scripts-guide.md` for the current workflow.
 Assign implementation work from `docs/fixes/README.md`; each brief defines its acceptance checks.
 Track task status in `docs/BACKLOG.md`. Historical notes do not establish current behavior.
 Use isolated test storage. Never run write tests against production or the existing `private/app.db`.
-The full strict test runner is specified in F07 and is not implemented yet.
-Current portable check: `.venv/bin/python -m pytest tests -q`.
+Full strict check: `python3 tools/run_tests.py` (needs `npm ci`; see `readme.md`).
+Portable check: `python3 tools/run_tests.py --portable-only`.
 
 <!-- CODEGRAPH_START -->
 ## CodeGraph

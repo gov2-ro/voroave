@@ -2,6 +2,43 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F07 strict test runner
+
+Added `tools/run_tests.py`, `package.json` (jsdom 26.1.0, playwright 1.56.1, lockfile), `pytest.ini`,
+`requirements-test.txt` and `tests/lib/deps.js`.
+
+Reproduction before the change: `pytest` collected `archive/` (261 passed, 6 failed). `test_ghici.js` exited 0 with
+"SKIP" when jsdom was missing. Browser suites loaded Playwright from a global `@playwright/mcp` path.
+`test_store_sync.js` used `abecedar` and `zăbavă`, which are absent from the built `ui.db`.
+`test_senses.js` section 3 renamed and replaced the real `public/data/ui.db` during the run.
+`public/api/config.local.php` (local, gitignored) holds a dev admin token and no private dir,
+so a plain run would have written to `private/app.db`.
+
+Design:
+- The runner stages a copy of `public/` (without `config.local.php`) in a temp dir. It writes a staged
+  `config.local.php` with a temp `OTIOS_PRIVATE_DIR` and a random admin token. No PHP change was needed.
+- Two stages, two PHP servers (dev router, free ports). "synthetic" has a tiny `ui.db` holding the two sync words:
+  the sync protocol suite is portable and keeps its assertions. "built" has copies of the real `ui.db`/`syn.db`.
+- A suite fails on a nonzero exit, a timeout, or any SKIP line. Suites also fail themselves under `OTIOS_STRICT=1`.
+- The runner checks that jsdom and playwright resolve inside the repo, not from `~/node_modules`.
+- It compares size and mtime of `private/app.db`, `secret.key`, `public/data/*.db`, `data/word_ids.tsv` before and after.
+- A suite is added with one `Suite(...)` line in `SUITES`.
+
+Other changes: `test_store_sync.js` accepts `OTIOS_SYNC_WORDS` and otherwise discovers words from the server.
+`test_senses.js` swaps the staged `ui.db` (`OTIOS_TEST_DATA_DIR`), never the repo copy.
+`test_footer_metrics.js` section 3 waits 300 ms for the ResizeObserver before sampling; it was flaky
+(1 of 2 runs failed with `["48px","21px"]`). A feedback loop would still fail it. After the wait: 4 of 4 runs passed.
+
+Validation (local only): full runner run 3 times. Runs 2 and 3: 17/17 suites passed (222 pytest tests plus 16 JS suites).
+Run 1 failed only `test_ghici.js` ("the pane definition is withheld", a spoiler race that F03 owns); runs 2 and 3 passed it.
+Protected files unchanged after every run. No php process or temp dir remained. SIGTERM mid-run also left none.
+Negative checks passed: `--timeout 1` gives FAIL (timeout); a missing jsdom gives exit 3 with `npm ci` advice
+and, at suite level, exit 0 with SKIP without `OTIOS_STRICT` but exit 1 with it; missing `node_modules` gives exit 3.
+A clean venv from `requirements-test.txt` passes `pytest` (222 passed). That check found `simplemma` was needed.
+
+Skipped or not done: Apache rewrite checks; no live verification; no synthetic fixture for built-data suites.
+`requirements.txt` still has unpinned entries and the optional wRodfreq line.
+
 ## 2026-10-05 — Technical handoff and documentation reconciliation
 
 Prepared F01–F08 implementation briefs with scope, decisions, regression cases, and closure rules.

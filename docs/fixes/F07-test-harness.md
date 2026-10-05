@@ -1,6 +1,9 @@
 # F07 — Make required checks reproducible and isolated
 
-Status: open. Priority: P2.
+Status: complete (local, 2026-10-05). Priority: P2.
+Run `python3 tools/run_tests.py`. See `docs/activity-history.md` for evidence and limits.
+Limit: the quiz DOM suite (`test_ghici.js`) failed once in four full runs; F03 owns that race.
+Limit: Apache rewrite rules are not tested; the runner uses the dev router.
 
 ## Evidence and target
 

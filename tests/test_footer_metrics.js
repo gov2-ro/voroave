@@ -17,16 +17,8 @@
 // covers the matrix. prefs.js measures the rendered bar and writes the token back. This
 // is the test that says the measurement is actually right, across the matrix that broke
 // every constant anyone tried.
-let chromium;
-try {
-  ({ chromium } = require(require('node:child_process')
-    .execSync('npm root -g', { encoding: 'utf8' }).trim() + '/@playwright/mcp/node_modules/playwright'));
-} catch (_) {
-  try { ({ chromium } = require('playwright')); } catch (__) {
-    console.log('SKIP  tests/test_footer_metrics.js — playwright not installed');
-    process.exit(0);
-  }
-}
+const deps = require('./lib/deps');
+const { chromium } = deps.loadPlaywright('tests/test_footer_metrics.js');
 
 const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
 const SKINS  = ['paper', 'brutal', 'govuk', 'registru', 'tezaur', 'velin'];
@@ -37,7 +29,7 @@ let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };
 
 (async () => {
-  const browser = await chromium.launch();
+  const browser = await deps.launchChromium('tests/test_footer_metrics.js', chromium);
 
   // One context, one page, reused across the matrix. A fresh context per combination
   // is ~90 browser launches and pushed this past two minutes; skin and text scale are
@@ -99,6 +91,10 @@ const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' :
   // chase each other. Watch the token across 30 frames after a reflowing resize.
   await measure('paper', 390, '100');
   await page.setViewportSize({ width: 540, height: 800 });
+  // Let the ResizeObserver apply the reflow once. Sampling from the resize itself catches
+  // the stale value in frame 1 and reports "unsettled" on a slow run. A real feedback loop
+  // still keeps changing the token for all 30 frames after this wait, so it still fails.
+  await page.waitForTimeout(300);
   const seen = await page.evaluate(async () => {
     const vals = [];
     for (let i = 0; i < 30; i++) {

@@ -1,0 +1,12 @@
+{
+  "name": "voroave-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Development dependencies for the browser and DOM test suites. Not used by the deployed PHP application.",
+  "engines": { "node": ">=22.0.0" },
+  "scripts": { "test": "python3 tools/run_tests.py" },
+  "devDependencies": {
+    "jsdom": "26.1.0",
+    "playwright": "1.56.1"
+  }
+}

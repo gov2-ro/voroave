@@ -60,7 +60,10 @@ const wordsIn = (html) => (html.match(/data-word="([^"]*)"/g) || [])
   // Swaps the real ui.db for a stripped copy for one request, then restores it via an
   // atomic rename either way. Safe against a crash mid-test: the `finally` always runs,
   // and the original file is never deleted, only renamed aside and back.
-  const dbPath       = path.join(__dirname, '..', 'public', 'data', 'ui.db');
+  // OTIOS_TEST_DATA_DIR points at the runner's private copy of public/data, so this swap
+  // never touches the repository's ui.db. Without it (a manual run) the repo copy is used.
+  const dataDir      = process.env.OTIOS_TEST_DATA_DIR || path.join(__dirname, '..', 'public', 'data');
+  const dbPath       = path.join(dataDir, 'ui.db');
   const backupPath   = dbPath + '.senses-test-backup';
   const strippedPath = dbPath + '.senses-test-stripped';
   let swapped = false;
@@ -92,17 +95,10 @@ const wordsIn = (html) => (html.match(/data-word="([^"]*)"/g) || [])
   }
 
   console.log('\n4. The panel does not overflow horizontally at 320px');
-  let chromium;
-  try {
-    ({ chromium } = require(require('node:child_process')
-      .execSync('npm root -g', { encoding: 'utf8' }).trim() + '/@playwright/mcp/node_modules/playwright'));
-  } catch (_) {
-    try { ({ chromium } = require('playwright')); } catch (__) { chromium = null; }
-  }
-  if (!chromium) {
-    console.log('  SKIP  playwright not installed');
-  } else {
-    const browser = await chromium.launch();
+  {
+    const deps = require('./lib/deps');
+    const { chromium } = deps.loadPlaywright('tests/test_senses.js');
+    const browser = await deps.launchChromium('tests/test_senses.js', chromium);
     const ctx = await browser.newContext({ viewport: { width: 320, height: 700 } });
     const page = await ctx.newPage();
     for (const skin of ['paper', 'brutal', 'govuk', 'registru', 'tezaur', 'velin']) {

@@ -28,13 +28,7 @@
 //      dropping the inner one, so this fails as "the marks vanished", not as an error.
 //   4. Auto-advance is correct-answers-only. On a wrong answer the two definitions
 //      side by side are the entire value of the round.
-let JSDOM, VirtualConsole;
-try {
-  ({ JSDOM, VirtualConsole } = require('jsdom'));
-} catch (_) {
-  console.log('SKIP  tests/test_ghici.js — jsdom not installed (npm install jsdom)');
-  process.exit(0);
-}
+const { JSDOM, VirtualConsole } = require('./lib/deps').loadJsdom('tests/test_ghici.js');
 
 const BASE = process.env.OTIOS_TEST_URL || 'http://127.0.0.1:8011';
 

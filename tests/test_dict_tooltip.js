@@ -17,13 +17,8 @@
 // short enough that its dict-toggle always sits within a default-height panel, so this
 // test isn't confounded by the separate (and separately known) issue where a long
 // multi-sense entry can push the toggle below .fp-body's scrollable fold.
-let chromium;
-try {
-  ({ chromium } = require(require('node:child_process')
-    .execSync('npm root -g', { encoding: 'utf8' }).trim() + '/@playwright/mcp/node_modules/playwright'));
-} catch (_) {
-  try { ({ chromium } = require('playwright')); } catch (__) { chromium = null; }
-}
+const deps = require('./lib/deps');
+const { chromium } = deps.loadPlaywright('tests/test_dict_tooltip.js');
 
 const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
 
@@ -31,12 +26,7 @@ let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };
 
 (async () => {
-  if (!chromium) {
-    console.log('SKIP  playwright not installed');
-    process.exit(0);
-  }
-
-  const browser = await chromium.launch();
+  const browser = await deps.launchChromium('tests/test_dict_tooltip.js', chromium);
 
   console.log('1. The tooltip renders at its computed position, not offset by #detail-panel\'s transform');
   for (const width of [900, 1100, 1280, 1600]) {

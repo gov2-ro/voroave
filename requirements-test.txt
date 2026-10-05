@@ -1,0 +1,14 @@
+# Minimum Python packages for the portable test suite (`pytest tests`).
+# Python 3 (tested with 3.14). Install with:
+#   python3 -m venv .venv && .venv/bin/pip install -r requirements-test.txt
+#
+# This file leaves out the heavy corpus packages (datasets, wordfreq) and the optional
+# editable wRodfreq checkout (`-e ../gov2/wrodfreq`). The pipeline still needs them:
+# install requirements.txt for that. No test imports them.
+pytest>=8
+# Imported at module level by scrape_synonyms.py and scrape_dcr.py, which tests import.
+requests
+beautifulsoup4
+lxml
+# Imported by make_shortlist.py, which tests import.
+simplemma

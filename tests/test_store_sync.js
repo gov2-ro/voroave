@@ -66,7 +66,25 @@ let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; say(ok, msg); };
 
 (async () => {
-  const W1 = 'abecedar', W2 = 'zăbavă';
+  // The sync API only accepts words that exist in ui.db, and a rebuild can drop any
+  // hardcoded word (`abecedar` and `zăbavă` both went that way). Two sources, both durable:
+  //   - OTIOS_SYNC_WORDS="a,b": the runner's synthetic ui.db fixture holds exactly these.
+  //   - otherwise: two words discovered from the server's own ui.db, one with diacritics
+  //     when possible, so the UTF-8 path is still exercised (as in test_lists_api.js).
+  let picked = (process.env.OTIOS_SYNC_WORDS || '').split(',').map((w) => w.trim()).filter(Boolean);
+  if (picked.length < 2) {
+    const search = await fetch(`${BASE}/api/search.php?page=1`).then((r) => r.text());
+    const found = [...new Set([...search.matchAll(/data-word="([^"]+)"/g)].map((m) => m[1]))];
+    const accented = found.filter((w) => /[^\x00-\x7f]/.test(w));
+    const plain = found.filter((w) => !/[^\x00-\x7f]/.test(w));
+    picked = [accented[0], plain[0] || accented[1]].filter(Boolean);
+  }
+  if (picked.length < 2) {
+    console.log(`  FAIL  need 2 fixture words (set OTIOS_SYNC_WORDS or serve a built ui.db)`);
+    process.exit(1);
+  }
+  const [W1, W2] = picked;
+  console.log(`  fixture words: ${W1}, ${W2}`);
 
   console.log('\n1. Returning beta user: existing localStorage, never synced before');
   const jar = makeJar();

@@ -49,7 +49,7 @@ An old note is not a current measurement. Do not duplicate the same task in seve
   `w` and `ssr`; `api/word.php` loads senses and citations too. Share the data-loading
   path so both renderers receive the same content.
 
-- [ ] **P2: Define a repeatable current-project test command.** [Implementation brief](fixes/F07-test-harness.md). Python tests under
+- [x] **P2: Define a repeatable current-project test command.** (Done 2026-10-05: `python3 tools/run_tests.py`; see F07 status.) [Implementation brief](fixes/F07-test-harness.md). Python tests under
   `tests/` pass: 222 tests. Unscoped pytest also collects archived Flask tests:
   261 passed, six failed. Twelve local API suites passed; `test_store_sync.js`
   failed because its hardcoded words `abecedar` and `zăbavă` are absent from `ui.db`.

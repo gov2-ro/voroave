@@ -83,6 +83,10 @@ const mark = (word, patch) => Object.assign(
 
   if (!ADMIN_TOKEN) {
     console.log('\n3. admin.php — SKIPPED (set OTIOS_ADMIN_TOKEN to run)');
+    if (process.env.OTIOS_STRICT === '1') {
+      console.log('  FAIL  OTIOS_ADMIN_TOKEN is required in strict mode');
+      failures++;
+    }
   } else {
     console.log('\n3. admin.php');
     const admin = makeJar();

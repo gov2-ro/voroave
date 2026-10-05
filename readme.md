@@ -115,23 +115,38 @@ The synonym aid is implemented. Its live query outage found on 2026-10-05 is tra
 
 ## Setup and verification
 
-Use PHP with PDO SQLite and mbstring. Use a repository-local Python virtual environment.
-`requirements.txt` currently includes an optional editable sibling dependency, `../gov2/wrodfreq`.
-It is not a self-contained or pinned installation contract; see F07 for the planned repair.
-Generated data and the source dump must be obtained/built separately.
+Required: Python 3 (tested with 3.14), PHP 8.1+ (extensions `pdo_sqlite`, `sqlite3`, `mbstring`, `json`),
+Node 22+, and the `sqlite3` command-line tool.
+Generated data (`public/data/ui.db`, `syn.db`) and the source dump must be built separately.
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate
-# Requires the sibling checkout while its editable line remains in requirements.txt:
-pip install -r requirements.txt
-python -m pytest tests -q
-php -S 127.0.0.1:8777 -t public tools/dev-router.php
+.venv/bin/pip install -r requirements-test.txt   # test packages only
+npm ci                                           # jsdom and Playwright, pinned in package-lock.json
+npx playwright install chromium                  # one-time browser download
+python3 tools/run_tests.py                       # the full strict check
 ```
 
-API/browser tests require isolated writable storage. Never use the existing `private/app.db` or production for write tests.
-There is no strict all-suite runner yet. JS DOM/browser dependencies are currently undeclared.
-See [F07](docs/fixes/F07-test-harness.md) for the acceptance contract.
+`requirements.txt` is the full pipeline set (corpus, frequency screens, scrapers).
+It includes the optional editable `-e ../gov2/wrodfreq` line, which needs that sibling checkout.
+No test needs it. The PHP application needs none of these packages.
+
+`tools/run_tests.py` is the single required command. It does the following:
+
+- It stages a copy of `public/` in a temp directory with a temp private directory and a random admin token.
+  The runner never opens `private/app.db`, `private/secret.key` or `public/data/*.db` for writing.
+  It compares their size and mtime before and after the run.
+- It starts and stops its own PHP server with the dev router on a free port.
+- It runs the Python tests and every `tests/test_*.js` suite.
+- It fails on a nonzero exit, a timeout, a missing prerequisite, or a SKIP line (a required skip).
+- It reports portable suites (no built data) and artifact-dependent suites (built `ui.db`/`syn.db`) separately.
+
+`python3 tools/run_tests.py --portable-only` runs the portable suites only. It is a partial check.
+`--list` shows the suite table. To add a suite, add one `Suite(...)` line to `SUITES` in the runner.
+Plain `pytest` runs current tests only (`pytest.ini`). Archived Flask tests have an explicit command:
+`.venv/bin/python -m pytest archive -q` (six known failures).
+Apache rewrite rules (`public/.htaccess`) are not tested here; the runner uses the dev router.
+See [F07](docs/fixes/F07-test-harness.md).
 
 ## Data contracts and evidence
 

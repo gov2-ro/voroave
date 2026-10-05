@@ -6,11 +6,12 @@ Read [the handoff queue](fixes/README.md) before assigning fixes.
 ## Environment and prerequisites
 
 The application requires PHP with PDO SQLite and mbstring. It uses vanilla JS and HTMX.
-There is currently no npm dependency manifest or strict test runner; F07 will add them.
+Tests need Python 3 (tested with 3.14), PHP 8.1+, Node 22+ and the `sqlite3` command. `package.json` pins jsdom and Playwright.
+Run `npm ci` and `npx playwright install chromium` once.
 Python scripts use a local virtual environment. Existing corpus workers may use an older shared VPS environment.
 `requirements.txt` is unpinned and includes optional `-e ../gov2/wrodfreq`.
 That install requires the sibling checkout. The PHP app does not require wRodfreq.
-F07 will separate optional processing dependencies from required test dependencies.
+`requirements-test.txt` lists the packages the tests need. Install it for tests; install `requirements.txt` only for the pipeline.
 Do not assume a clean checkout contains generated databases or the 1.65GB dump.
 
 ## Extraction
@@ -89,16 +90,21 @@ Do not merge users or bypass shrink protection during routine builds.
 ## Local application and tests
 
 ```bash
-php -S 127.0.0.1:8777 -t public tools/dev-router.php
-.venv/bin/python -m pytest tests -q
+python3 tools/run_tests.py                  # full strict check; exit 0 only if every suite ran and passed
+python3 tools/run_tests.py --portable-only  # partial: suites that need no built data
+python3 tools/run_tests.py --only sync -v   # one suite, with full output
+php -S 127.0.0.1:8777 -t public tools/dev-router.php   # manual dev server (uses your own config)
 ```
 
-Before running JS/API tests, point `OTIOS_PRIVATE_DIR` at disposable storage through an isolated local configuration.
-API tests write users, marks, lists, and game state. The default private directory is persistent user data.
-Set `OTIOS_TEST_URL` to the isolated server. Never point write tests at the live URL.
-Run each `tests/test_*.js` separately; `node tests/*.js` does not execute every script.
-DOM/browser suites require jsdom or Playwright. A successful skip does not verify their behavior.
-F07 defines the strict runner and authenticated moderation setup.
+The runner stages its own copy of `public/`, a temp `OTIOS_PRIVATE_DIR` and a random admin token.
+It never touches `private/app.db`, `secret.key` or `public/data/*.db`, and it checks that after the run.
+It stops its PHP server on success, failure, timeout and signal.
+A SKIP line, a timeout or a missing prerequisite (jsdom, Chromium, `ui.db`, `syn.db`, `sqlite3`) fails the run.
+The summary lists portable suites and artifact-dependent suites separately.
+Default `pytest` collects `tests/` only. Run archived tests with `.venv/bin/python -m pytest archive -q`.
+For a manual run of one JS suite against your own server, set `OTIOS_TEST_URL` to an isolated server.
+Never point write tests at a live URL or at the default `private/` directory.
+The runner does not test Apache rewrite rules.
 The 2026-10-05 audit found 222 current Python passes and six failures in archived Flask discovery.
 
 ## Deployment and recovery

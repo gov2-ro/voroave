@@ -1,4 +1,4 @@
-# Corpus processing; dependency pinning/separation is specified in docs/fixes/F07-test-harness.md
+# Full pipeline requirements (corpus, frequency screens, scrapers). Tests only need requirements-test.txt.
 datasets
 
 # Pragmatic alternative — see docs/archive-obsolete/wordfreq-recipe.md
