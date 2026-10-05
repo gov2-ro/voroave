@@ -197,10 +197,6 @@ $meta_parts = array_filter([
     <span class="fp-extra-label">≡ sinonime</span>
     <?php foreach ($syns as $s): ?><a class="syn-chip" href="<?= BASE ?>/?q=<?= urlenc($s) ?>"><?= e($s) ?></a><?php endforeach; ?>
     <?php if (count($synonyms) > count($syns)): ?><span class="syn-more">+<?= count($synonyms) - count($syns) ?></span><?php endif; ?>
-    <?php /* The writing-aid tool: its own graph (dexonline's Relation table + this scrape,
-             ranked by modern currency) is broader than the scrape-only chips above, so this
-             is a route out to it rather than a duplicate of them. docs/sinonime/escalate.md §2. */ ?>
-    <a class="syn-explore-link" href="<?= BASE ?>/sinonime?q=<?= urlenc($w['word']) ?>">vezi în sinonime →</a>
   </div>
   <?php endif; ?>
   <?php if ($ants): ?>

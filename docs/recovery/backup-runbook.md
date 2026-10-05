@@ -13,7 +13,7 @@ Nothing here changes a scheduled job, a credential or production data.
 | `config.local.php` | Private directory path, admin token (`OTIOS_ADMIN_TOKEN`), optional `OTIOS_QUIZ_SECRET`. | `public/api/config.local.php` on the server | No | No (gitignored) |
 | `data/word_ids.tsv` | Permanent share-link ids. Append-only. | Repository | No | Yes |
 | `data/editorial.tsv` | Curator marks. | Repository | No | Yes |
-| `ui.db`, `syn.db` | Rebuilt by the pipeline. Not irreplaceable. | `public/data/` | No | No |
+| `ui.db` | Rebuilt by the pipeline. Not irreplaceable. | `public/data/` | No | No |
 
 Notes:
 

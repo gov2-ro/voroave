@@ -102,22 +102,20 @@ flowchart TD
     DEX --> MEAN[Structured meanings]
     MEAN --> BUILD
     BUILD --> UI[public/data/ui.db]
-    DEX --> REL[Relation extraction]
-    REL --> SYN[public/data/syn.db]
     UI --> APP[PHP + HTMX + vanilla JS]
-    SYN --> APP
     APP --> USER[Private user-data database]
 ```
 
 CoRoLa and subtitles are reference datasets, excluded from the current production panels.
 Both frequency-screen scripts are standalone; neither feeds `make_shortlist.py` or `ui.db`.
-The synonym aid is implemented. Its live query outage found on 2026-10-05 is tracked in F01.
+The synonym writing aid (`/sinonime`) moved to a separate project, `~/devbox/sinonime`, on 2026-10-06.
+It reads this checkout's `data/` as input; see its README.
 
 ## Setup and verification
 
 Required: Python 3 (tested with 3.14), PHP 8.1+ (extensions `pdo_sqlite`, `sqlite3`, `mbstring`, `json`),
 Node 22+, and the `sqlite3` command-line tool.
-Generated data (`public/data/ui.db`, `syn.db`) and the source dump must be built separately.
+Generated data (`public/data/ui.db`) and the source dump must be built separately.
 
 ```bash
 python3 -m venv .venv
@@ -139,7 +137,7 @@ No test needs it. The PHP application needs none of these packages.
 - It starts and stops its own PHP server with the dev router on a free port.
 - It runs the Python tests and every `tests/test_*.js` suite.
 - It fails on a nonzero exit, a timeout, a missing prerequisite, or a SKIP line (a required skip).
-- It reports portable suites (no built data) and artifact-dependent suites (built `ui.db`/`syn.db`) separately.
+- It reports portable suites (no built data) and artifact-dependent suites (built `ui.db`) separately.
 
 `python3 tools/run_tests.py --portable-only` runs the portable suites only. It is a partial check.
 `--list` shows the suite table. To add a suite, add one `Suite(...)` line to `SUITES` in the runner.
@@ -202,7 +200,7 @@ Default-view counts change with filtering; do not copy them into undated docs.
 - `data/word_ids.tsv`: append-only permanent IDs behind compact `?w=` shares.
 - `data/editorial.tsv`: curator picks/demotions, exported from an explicitly selected account.
 - `data/sitemap_words.tsv`: tracked input to generated word-page sitemap.
-- `public/data/ui.db` and `syn.db`: generated read-only dictionary artifacts.
+- `public/data/ui.db`: generated read-only dictionary artifact.
 - `private/app.db`: writable annotations, lists, devices, and game state; never upload it over an existing deployment.
 - `private/secret.key`: signing key; preserve it with configuration and user-data backups.
 
@@ -214,7 +212,6 @@ A snapshot script exists; cron, off-machine backup, and restore readiness still 
 
 - [Corpus expansion and measured exclusions](docs/corpus-expansion-plan.md)
 - [Structured senses](docs/senses-plan.md)
-- [Synonym implementation specifications](docs/sinonime/README.md)
 - [Conceptual roadmap](docs/conceptual-roadmap.md): historical critique with current-status notes
 - [Publication assessment](docs/publication-assessment.md): dated assessment, not an implemented evaluation
 - [F09 evaluation brief](docs/fixes/F09-evaluation.md): next bounded research deliverable

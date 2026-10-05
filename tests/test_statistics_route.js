@@ -35,7 +35,7 @@ const get = (p, opt = {}) => fetch(BASE + p, { redirect: 'manual', ...opt });
   check(!/href="[^"]*\/stats["?]/.test(nav + despre + html), 'no page links to the reserved /stats');
 
   console.log('\n4. Other clean URLs are unchanged');
-  for (const p of ['/despre', '/metodologie', '/ghici', '/colectii', '/liste', '/sinonime']) {
+  for (const p of ['/despre', '/metodologie', '/ghici', '/colectii', '/liste']) {
     const x = await get(p);
     check(x.status === 200, `GET ${p} -> ${x.status}`);
   }

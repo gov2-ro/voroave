@@ -56,15 +56,15 @@ class Suite:
     name: str
     kind: str                 # "py" or "js"
     target: str               # test file or directory, relative to ROOT
-    stage: str                # "synthetic" (portable fixture) or "built" (real ui.db/syn.db)
-    needs: tuple = ()         # subset of: jsdom, browser, ui_db, syn_db, sqlite3
+    stage: str                # "synthetic" (portable fixture) or "built" (real ui.db)
+    needs: tuple = ()         # subset of: jsdom, browser, ui_db, sqlite3
     timeout: int = 300
     env: tuple = ()           # extra (key, value) pairs
 
 
 # ---- The suite table. Add a line here to add a suite. ---------------------------------
 # stage "synthetic": runs against a tiny generated ui.db; needs no built data (portable).
-# stage "built":     runs against a copy of public/data/ui.db (+ syn.db); artifact-dependent.
+# stage "built":     runs against a copy of public/data/ui.db; artifact-dependent.
 SUITES = [
     Suite("python (pytest tests)", "py", "tests", "none", (), 600),
     Suite("js sync (synthetic ui.db)", "js", "tests/test_store_sync.js", "synthetic", (), 120,
@@ -82,9 +82,6 @@ SUITES = [
     Suite("js share view", "js", "tests/test_share_view.js", "built", ("ui_db",)),
     Suite("python statistici route (F04)", "py", "tests/test_statistics_route.py", "none", (), 120),
     Suite("js statistici route (F04)", "js", "tests/test_statistics_route.js", "built", ("ui_db",)),
-    Suite("js sinonime", "js", "tests/test_sinonime.js", "built", ("ui_db", "syn_db")),
-    Suite("js sinonime states (F01)", "js", "tests/test_sinonime_states.js", "built",
-          ("ui_db", "syn_db", "sqlite3")),
     Suite("js senses (browser)", "js", "tests/test_senses.js", "built",
           ("ui_db", "browser", "sqlite3"), 300),
     Suite("js detail parity (F05)", "js", "tests/test_detail_parity.js", "built",
@@ -198,9 +195,6 @@ def check_artifacts(suites: list[Suite], problems: list[str]) -> None:
     if "ui_db" in need and not (data / "ui.db").is_file():
         problems.append("public/data/ui.db is missing. Build it (tools/build_ui_db.py) "
                         "or run with --portable-only.")
-    if "syn_db" in need and not (data / "syn.db").is_file():
-        problems.append("public/data/syn.db is missing. Build it (tools/build_syn_db.py) "
-                        "or run with --portable-only.")
     if "sqlite3" in need and shutil.which("sqlite3") is None:
         problems.append("The sqlite3 command-line tool is missing. Install it.")
 
@@ -210,7 +204,6 @@ PROTECTED = [
     ROOT / "private" / "app.db",
     ROOT / "private" / "secret.key",
     ROOT / "public" / "data" / "ui.db",
-    ROOT / "public" / "data" / "syn.db",
     ROOT / "data" / "word_ids.tsv",
 ]
 
@@ -263,10 +256,9 @@ class Stage:
             con.commit()
             con.close()
         else:
-            for f in ("ui.db", "syn.db"):
-                src = ROOT / "public" / "data" / f
-                if src.is_file():
-                    shutil.copy(src, self.public / "data" / f)
+            src = ROOT / "public" / "data" / "ui.db"
+            if src.is_file():
+                shutil.copy(src, self.public / "data" / "ui.db")
         # The staged config is the only config the staged app can load.
         (self.public / "api" / "config.local.php").write_text(
             "<?php\ndeclare(strict_types=1);\n"

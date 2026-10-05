@@ -23,7 +23,8 @@ yields 164,399 word-level synonym pairs over 63,049 words in ~15s with no HTTP. 
 different artefact by different authors, and the redaction above says nothing about it.
 The two sources are complementary: on the 1,542 words both cover, 59% of what this
 scraper returns is not in the graph, and 524 of its 2,066 words are absent from the graph
-entirely. Keep scraping — but for the gap, not for everything. See `docs/sinonime/`.
+entirely. Keep scraping — but for the gap, not for everything. The graph and its
+measurements now live in the separate Sinonime project (~/devbox/sinonime, docs/).
 
 One request per word, against the same URL `scrape_definitions.py` already uses. Be
 polite to dexonline.ro — it is community-run — and keep `--delay >= 1.2`.
@@ -44,13 +45,12 @@ Usage:
     python scrape_synonyms.py --merge                    # everything on the shortlist
     python scrape_synonyms.py --merge-only               # just upsert the checkpoint
 
-    # Phase 4 (docs/sinonime/spec.md): the Sinonime gap, once v1 has shipped. Selects
-    # words with band >= 3 (100+ modern occurrences) and no type-1 or type-5 edge in
-    # public/data/syn.db, measured against the *full* DEX headword universe rather than
-    # syn.db's own word table -- see load_gap_words()'s docstring for why that distinction
-    # matters. ~22,107 words measured 2026-08-17 (spec.md estimated 21,489; the two were
-    # never expected to match exactly -- different builds, same method).
-    python scrape_synonyms.py --gap --delay 3.0 --merge --output data/processed/scraped_synonyms_gap.csv
+    # The Sinonime gap (Sinonime docs/spec.md Phase 4): words with band >= 3 and no
+    # synonym edge in its syn.db, ~22,107 words. Sinonime's tools/gap_words.py writes the
+    # list; this script only scrapes it. (Until 2026-10-06 this was `--gap`, which read
+    # Sinonime's relations.db and syn.db from here.)
+    python scrape_synonyms.py --input ../sinonime/data/gap_words.csv --delay 3.0 --merge \
+        --output data/processed/scraped_synonyms_gap.csv
 """
 
 from __future__ import annotations
@@ -75,10 +75,6 @@ DEFAULT_INPUT      = Path('data/processed/forgotten_words_shortlist.csv')
 DEFAULT_OUTPUT     = Path('data/processed/scraped_synonyms.csv')
 DEFAULT_DB         = Path('data/processed/synonyms.db')
 DEXONLINE_LOCK     = Path('data/.dexonline.lock')
-RELATIONS_DB       = Path('data/processed/relations.db')
-CORPUS_DB          = Path('data/processed/corpus_frequencies.db')
-INFLECTED_DB       = Path('data/processed/inflected_forms.db')
-SYN_DB             = Path('public/data/syn.db')
 DEXONLINE_URL_TMPL = 'https://dexonline.ro/definitie/{}'
 USER_AGENT         = 'otios-scraper/0.1 (Romanian linguistic research)'
 FIELDNAMES         = ['word', 'synonyms', 'antonyms', 'source_url', 'scraped_at', 'status']
@@ -305,63 +301,6 @@ def load_words(input_path: Path, seam: str | None) -> list[str]:
     return words
 
 
-def load_gap_words() -> list[str]:
-    """Phase 4's word list (docs/sinonime/spec.md): words with band >= 3 (100+ modern
-    occurrences) and no type-1 or type-5 edge in public/data/syn.db.
-
-    Deliberately measured against the *full* DEX main-headword universe (every
-    EntryLexeme.main=1 lexeme in relations.db), not against syn.db's own `word` table.
-    syn.db only ever gets a `word` row for a form some build step actually touched
-    (a Relation, a scrape hit, or a type-5 clique) -- so restricting the gap search to
-    that table undercounts by two orders of magnitude: measured 2026-08-17, only 863
-    of syn.db's own words are band>=3 with no type-1/5 edge, because a word nothing in
-    the graph ever reaches never got a row to begin with. Measured the same day against
-    the full headword universe: 22,107, matching spec.md's ~21,489 estimate.
-    """
-    import math
-
-    if not (RELATIONS_DB.exists() and CORPUS_DB.exists() and INFLECTED_DB.exists() and SYN_DB.exists()):
-        missing = [str(p) for p in (RELATIONS_DB, CORPUS_DB, INFLECTED_DB, SYN_DB) if not p.exists()]
-        print(f'--gap needs: {", ".join(missing)}. Run extract_relations.py and '
-              f'tools/build_syn_db.py first.', file=sys.stderr)
-        return []
-
-    rel = sqlite3.connect(str(RELATIONS_DB))
-    headwords = {form for (form,) in rel.execute("""
-        SELECT DISTINCT l.form_norm FROM entry_lexeme el JOIN lexeme l ON l.id = el.lexeme_id
-         WHERE el.main = 1 AND l.form_norm IS NOT NULL
-    """)}
-    rel.close()
-
-    corp = sqlite3.connect(str(CORPUS_DB))
-    corp.execute(f"ATTACH DATABASE '{INFLECTED_DB}' AS infl")
-    corp.execute('CREATE TEMP TABLE want_lemma (lemma TEXT PRIMARY KEY)')
-    corp.executemany('INSERT INTO want_lemma VALUES (?)', [(w,) for w in headwords])
-    occ_by_form = {form: (occ or 0) for form, occ in corp.execute("""
-        SELECT fl.lemma, SUM(cwf.occurrence_count)
-          FROM infl.form_lemma fl
-          JOIN corpus_word_frequency cwf ON cwf.word = fl.form AND cwf.corpus_name = 'culturax_ro'
-          JOIN want_lemma w ON w.lemma = fl.lemma
-         GROUP BY fl.lemma
-    """)}
-    corp.close()
-
-    def band(occ: int) -> int:
-        return 0 if occ <= 0 else min(7, 1 + int(math.floor(math.log10(occ))))
-
-    band3plus = {f for f in headwords if band(occ_by_form.get(f, 0)) >= 3}
-
-    syn = sqlite3.connect(str(SYN_DB))
-    covered = {form for (form,) in syn.execute("""
-        SELECT DISTINCT w.form FROM word w
-         WHERE w.id IN (SELECT sw.word_id FROM sense_word sw JOIN edge e ON e.sid = sw.sid WHERE e.t IN (1,5))
-            OR w.id IN (SELECT e.word_id FROM edge e WHERE e.t IN (1,5))
-    """)}
-    syn.close()
-
-    return sorted(band3plus - covered)
-
-
 def merge_into_db(csv_path: Path, db_path: Path) -> int:
     if not csv_path.exists():
         print(f'Nothing to merge: {csv_path} not found')
@@ -437,9 +376,6 @@ def main() -> int:
     ap.add_argument('--db',     type=Path, default=DEFAULT_DB)
     ap.add_argument('--seam', choices=['relevant', 'curiosity'], default=None,
                     help='Only scrape one seam (relevant = the ~2.8k default view)')
-    ap.add_argument('--gap', action='store_true',
-                    help='Phase 4 (docs/sinonime/spec.md): band>=3 words with no type-1/5 '
-                         'edge in public/data/syn.db, instead of --input/--seam')
     ap.add_argument('--limit', type=int, default=None, help='Cap words this run')
     ap.add_argument('--delay', type=float, default=1.2,
                     help='Seconds between requests (default: %(default)s)')
@@ -453,11 +389,10 @@ def main() -> int:
                     help='Re-queue words previously recorded as not_found')
     args = ap.parse_args()
 
-    # min_delay = 3.0 if args.gap else 1.2
-    min_delay = 0.8 if args.gap else 1.2
+    min_delay = 1.2
     if args.delay < min_delay and not args.dry_run:
         print(f'Refusing --delay {args.delay}: dexonline.ro is community-run, keep it '
-              f'at {min_delay}s or more{" for --gap" if args.gap else ""}.', file=sys.stderr)
+              f'at {min_delay}s or more.', file=sys.stderr)
         return 1
 
     if args.merge_only:
@@ -465,7 +400,7 @@ def main() -> int:
         print(f'Merged {n:,} rows → {args.db}')
         return 0
 
-    if not args.gap and not args.input.exists():
+    if not args.input.exists():
         print(f'Missing: {args.input} — run make_shortlist.py first.', file=sys.stderr)
         return 1
 
@@ -484,15 +419,13 @@ def main() -> int:
                   f'first.', file=sys.stderr)
             return 1
 
-    words = load_gap_words() if args.gap else load_words(args.input, args.seam)
-    if args.gap and not words:
-        return 1
+    words = load_words(args.input, args.seam)
     done  = load_checkpoint(args.output, args.retry_not_found)
     todo  = [w for w in words if w not in done]
     if args.limit:
         todo = todo[:args.limit]
 
-    scope = ' (gap)' if args.gap else (f' (seam={args.seam})' if args.seam else '')
+    scope = f' (seam={args.seam})' if args.seam else ''
     print(f'{len(words):,} words{scope}; {len(done):,} already done; '
           f'{len(todo):,} to fetch')
     if not todo:

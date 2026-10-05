@@ -1,7 +1,7 @@
 # Audit implementation handoff
 
 Status (2026-10-05): F01–F08 are fixed locally and committed; none is deployed.
-F01, F02, F04 and F05 still need a live check after the owner deploys. F09 and F10 are planning deliverables for owner decision.
+F02, F04 and F05 still need a live check after the owner deploys. F01 moved to the Sinonime project on 2026-10-06. F09 and F10 are planning deliverables for owner decision.
 Each brief's `Status:` line is authoritative. Evidence was collected on 2026-10-05.
 Reproduce each finding before changing code. Live state may change after this date.
 
@@ -10,7 +10,7 @@ Historical plans describe earlier decisions; they do not override these briefs o
 
 | Order | Brief | Priority | Dependency / shared files |
 |---|---|---|---|
-| 1 | [F01 — Synonym deployment](F01-synonym-deployment.md) | P1 | Investigation; deployment access may be needed |
+| 1 | F01 — Synonym deployment: moved with the synonym aid to `~/devbox/sinonime` (`docs/F01-deployment.md`) on 2026-10-06 | P1 | Tracked in that project |
 | 2 | [F02 — Reliable sync](F02-sync.md) | P1 | `store.js`, sync API, sync tests |
 | 3 | [F03 — Quiz spoilers](F03-quiz-spoilers.md) | P1 | Coordinate detail markup with F05 |
 | 4 | [F04 — Statistics route](F04-statistics-route.md) | P2 | Navigation, canonical URLs, hosting |
@@ -46,7 +46,7 @@ remaining limitations, and any deployment steps requiring the owner.
 ```
 
 Replace the filename with the assigned brief. Assign one brief per agent initially.
-For F01, the deliverable may be an investigation and a reviewable deployment plan.
+
 For F09 and F10, stop at the planning boundaries those briefs define.
 
 ## Review and closure

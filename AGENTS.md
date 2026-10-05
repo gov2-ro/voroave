@@ -931,7 +931,11 @@ pairs over 63,049 words in ~15 seconds with no HTTP. Nothing in this repo read i
 words both cover, **59% of the scrape's tokens are new information**, and `Relation` is
 strong on modern vocabulary exactly where Seche is weak, and vice versa.
 
-Full measurements, schema and build spec: `docs/sinonime/`.
+Full measurements, schema and build spec: the separate **Sinonime** project
+(`~/devbox/sinonime`, detached 2026-10-06). It owns `extract_relations.py`, `syn.db` and the
+writing-aid page, and reads this checkout's `data/` as read-only input. `scrape_synonyms.py`
+stays here because its output also feeds `ui.db`; Sinonime's `tools/gap_words.py` writes the
+gap word list that this scraper reads with `--input`.
 
 ```bash
 python scrape_synonyms.py --dry-run --seam relevant     # count + ETA, no requests

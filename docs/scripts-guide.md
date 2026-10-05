@@ -65,15 +65,9 @@ Until F08 lands, preserve the last good artifact before rebuilding.
 `data/word_ids.tsv` is append-only. Verify no existing ID is removed, changed, or assigned to another word.
 Never run a rebuild or ID migration merely to execute tests.
 
-The synonym writing aid has its own generated database:
-
-```bash
-python extract_relations.py
-python tools/build_syn_db.py
-```
-
-Consult [synonym specifications](sinonime/spec.md) for inputs and schema.
-`public/data/ui.db` and `public/data/syn.db` are generated artifacts, not tracked source.
+The synonym writing aid and its database moved to a separate project, `~/devbox/sinonime`, on 2026-10-06.
+That project reads this checkout's `data/` (dump, corpus counts, inflections, `synonyms.db`) as input.
+`public/data/ui.db` is a generated artifact, not tracked source.
 `validate_with_wordfreq.py` and `validate_with_wrodfreq.py` are standalone screens; neither feeds the live ranking.
 The removed wordfreq recipe is retained [as historical research](archive-obsolete/wordfreq-recipe.md).
 
@@ -101,7 +95,7 @@ php -S 127.0.0.1:8777 -t public tools/dev-router.php   # manual dev server (uses
 The runner stages its own copy of `public/`, a temp `OTIOS_PRIVATE_DIR` and a random admin token.
 It never touches `private/app.db`, `secret.key` or `public/data/*.db`, and it checks that after the run.
 It stops its PHP server on success, failure, timeout and signal.
-A SKIP line, a timeout or a missing prerequisite (jsdom, Chromium, `ui.db`, `syn.db`, `sqlite3`) fails the run.
+A SKIP line, a timeout or a missing prerequisite (jsdom, Chromium, `ui.db`, `sqlite3`) fails the run.
 The summary lists portable suites and artifact-dependent suites separately.
 Default `pytest` collects `tests/` only. Run archived tests with `.venv/bin/python -m pytest archive -q`.
 For a manual run of one JS suite against your own server, set `OTIOS_TEST_URL` to an isolated server.

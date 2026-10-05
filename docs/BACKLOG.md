@@ -12,12 +12,8 @@ An old note is not a current measurement. Do not duplicate the same task in seve
 
 ### Project audit — 2026-10-05
 
-- [ ] **P1: Live synonym searches return HTTP 500.** *Local fix done 2026-10-05 (503 unavailable state, `api/_syn_check.php`, tests); live outage open until the owner deploys `syn.db` and verifies.* [Implementation brief](fixes/F01-synonym-deployment.md). The landing page loads, but
-  `/sinonime?q=frumos`, `?q=repede`, `?q=văz`, `/sinonime.php?q=frumos`, and
-  `/api/syn.php?q=frumos` fail. Local synonym tests pass against the checked-out
-  databases. Inspect server logs and verify `public/data/syn.db`, its schema,
-  permissions, and deployed PHP capabilities. The root cause is not yet established.
-  Add a production smoke check that searches a word; testing the landing page misses this.
+- [x] **P1: Live synonym searches return HTTP 500 (F01).** Moved with the synonym aid to the
+  Sinonime project (`~/devbox/sinonime`, `docs/BACKLOG.md`, `docs/F01-deployment.md`) on 2026-10-06.
 
 - [x] **P1: Sync drops newer edits made during an earlier push.** *Local fix done 2026-10-05 (revision queue, per-word outcomes, batching; see `docs/sync-protocol.md`); not yet deployed.* [Implementation brief](fixes/F02-sync.md). Reproduced with
   the real `store.js` in a VM and a delayed response. Edit `zapciu`, start `syncNow()`,
@@ -74,7 +70,10 @@ An old note is not a current measurement. Do not duplicate the same task in seve
 
 Local tags `v0.2.0`–`v0.6.0` mark this session's work. They are not pushed (`git push --tags`).
 
-- [ ] **Deploy F01–F06 and verify live.** Nothing from 2026-10-05 is deployed. Each brief's `Status:` line names its live check.
+- [ ] **Deploy F02–F06 and verify live.** Nothing from 2026-10-05 is deployed. Each brief's `Status:` line names its live check.
+  F01 moved to the Sinonime project. The synonym aid is no longer in `public/`: an `rsync` without `--delete` leaves
+  `sinonime.php`, `api/syn.php`, `api/_syn*.php`, `api/_partials/syn_*.php`, `assets/syn.js` and `data/syn.db` live on
+  the server. Remove them, or decide on a `/sinonime` redirect first (Sinonime `docs/BACKLOG.md`).
   Deploy `public/api/sync.php` and `public/assets/store.js` together, server first (F02, `docs/sync-protocol.md`).
 - [ ] **Finish the F09 Stage 0 spot-check.** Tooling is ready (`docs/eval/protocol.md`, Stage 0). The owner marks 150 words locally.
   Link: `data/eval/spotcheck_link.txt`. Marker: paste `tools/spotcheck_marker.js` into the console. Report: `tools/eval_spotcheck.py --from-appdb`.
@@ -87,22 +86,32 @@ Local tags `v0.2.0`–`v0.6.0` mark this session's work. They are not pushed (`g
   device, quiz answers and marks (see activity history, "Test isolation guard"). Back up the file before any delete.
 - [ ] **F03 follow-up: the unlisted flash mode (`/ghici?mode=flash`) shows the definition before the reveal.** Out of F03's scope.
 - [ ] **F02 follow-up: no automatic retry with backoff after a transient sync failure.** The next edit, page load or tab hide retries.
+- [ ] **Delete the synonym-aid leftovers after the 2026-10-06 detach** (now in `~/devbox/sinonime`).
+  - [ ] Local, gitignored, already copied to Sinonime: `public/data/syn.db` (16 MB) and `data/processed/relations.db` (44 MB).
+    Nothing in this repo reads them now. Keep `data/processed/scraped_synonyms_gap.csv`: it is the scraper's gap checkpoint.
+  - [ ] On the voroave.ro server: `sinonime.php`, `api/syn.php`, `api/_syn.php`, `api/_syn_check.php`,
+    `api/_partials/syn_autocomplete.php`, `syn_landing.php`, `syn_result.php`, `syn_unavailable.php`, `assets/syn.js`
+    and `data/syn.db`. An `rsync` without `--delete` leaves them live. Decide on a `/sinonime` redirect first
+    (a 301 on the page only, never on `api/`; see Sinonime `docs/BACKLOG.md`).
 
 ### Public alpha readiness — 2026-10-05
 
 The owner's sequence: build a full-featured MVP first. Use it to ask dexonline for permission.
 Then run a final test round, launch a public alpha, and ask for contributions.
 
-- [ ] **Detach the synonym sub-project (`sinonime`) to `~/devbox/si9ni.me/`.** The owner plans a separate project.
-  Candidate files to move: `public/sinonime.php`, `public/api/syn.php`, `public/api/_syn.php`,
-  `public/api/_syn_check.php`, `public/api/_partials/syn_*.php`, `public/assets/syn.js`,
-  `tools/build_syn_db.py`, `docs/sinonime/`, `tests/test_sinonime*.js`, `tests/test_build_syn_db.py`,
-  and the two `sinonime` suites in `tools/run_tests.py`.
-  `extract_relations.py` and `scrape_synonyms.py` also feed `ui.db` (`words.synonyms`, `words.antonyms`).
-  Keep them here, or decide how the new project gets `relations.db`. Do not duplicate the extractor silently.
-  Remove the `sinonime` navigation entry and any links to it, and check `NAV_ITEMS`, `despre.html` and the sitemap.
-  The F01 live outage moves with the sub-project. Until the split, hide the entry or deploy `syn.db`.
-  Note: `sync.php` and `test_store_sync*.js` match the same filename pattern; they are annotation sync and stay.
+- [x] **Detach the synonym sub-project (`sinonime`).** Done 2026-10-06, to `~/devbox/sinonime`
+  (not `si9ni.me`; the host is still open there). Moved with history (`git filter-repo`): the page,
+  `api/syn.php`, `api/_syn*.php`, `api/_partials/syn_*.php`, `assets/syn.js`, the SINONIME section and
+  `--syn-*` tokens of `app.css` (now `syn.css` there), `tools/build_syn_db.py`, `extract_relations.py`,
+  `docs/sinonime/`, F01, and the four sinonime test files. `dump_parser.py` is a vendored copy there.
+  Correction to this entry's premise: `extract_relations.py` never fed `ui.db`. Only
+  `extract_meanings.py` reads `Relation`, on its own, so the extractor moved. `scrape_synonyms.py` stays: it
+  feeds `words.synonyms`. Its `--gap` mode read Sinonime's `relations.db`/`syn.db`, so it was removed; Sinonime's
+  `tools/gap_words.py` writes the list and this scraper reads it with `--input`. Removed the `despre.html`
+  „vezi și” link, the detail panel's „vezi în sinonime →” link and its CSS, `/sinonime` from
+  `test_statistics_route.js`, and the two suites from `tools/run_tests.py`. `NAV_ITEMS` and the sitemap
+  never listed it. The built `public/data/syn.db` and `data/processed/relations.db` are still in this
+  checkout (gitignored, copied to Sinonime); delete them when convenient.
 
 - [ ] **dexonline licence: list the sources that are not open.** See <https://dexonline.ro/license>.
   The owner handles this after the MVP exists, as part of the permission request.
@@ -602,7 +611,7 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
 
 - [x] **Diacritic-insensitive search** — searching `otios` should find `oțios`; `stramosesc` should find `strămoșesc`. Normalize both the query and the indexed word by stripping diacritics before matching (ț→t, ș→s, ă→a, â→a, î→i). Implement in the SQL WHERE clause using a pre-computed `word_normalized` column in the `words` table (populated at build time), or a SQLite custom function. Both PHP and Flask search endpoints need updating.
 
-- [x] **synonyms data** — done 2026-08-08. `scrape_synonyms.py` → `synonyms.db` → `words.synonyms`/`words.antonyms`, rendered as linked chips in the detail panel. The Litera dictionaries (`Sinonime`, `Sinonime82`, `Antonime`) are redacted to 23 characters in `Definition.internalRep`, so `dict_count` knows a word is in them but not what they say. **Corrected 2026-08-14: that is true of the Litera *definition text* only, and was wrongly generalised to "not available from the dump".** The `Relation` table ships in full — 158,860 rows, 164,399 word-level synonym pairs over 63,049 words, ~15s to build, no HTTP. See `docs/sinonime/`.
+- [x] **synonyms data** — done 2026-08-08. `scrape_synonyms.py` → `synonyms.db` → `words.synonyms`/`words.antonyms`, rendered as linked chips in the detail panel. The Litera dictionaries (`Sinonime`, `Sinonime82`, `Antonime`) are redacted to 23 characters in `Definition.internalRep`, so `dict_count` knows a word is in them but not what they say. **Corrected 2026-08-14: that is true of the Litera *definition text* only, and was wrongly generalised to "not available from the dump".** The `Relation` table ships in full — 158,860 rows, 164,399 word-level synonym pairs over 63,049 words, ~15s to build, no HTTP. See the Sinonime project's `docs/` (detached 2026-10-06).
 
 - [ ] **UI redesign** — fresh-identity, mobile-first redesign spec written for a designer in `docs/design-brief.md` (covers table view, filter-bar redesign, calmer verdict palette, play modes, shared-word landing). Hand off when ready.
 
@@ -1077,47 +1086,10 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
   existent la **11.517 (63,0%)** — inclusiv în seamul `curiosity`, unde până acum era zero.
   Deci `syn_count` se poate calcula pe date reale acum, iar regula „exclude în loc să
   numeri 0" rămâne validă exact pentru cele **6.753** de cuvinte rămase neacoperite.
-  Vezi `docs/sinonime/`.
+  Vezi `docs/` din proiectul Sinonime (detașat 2026-10-06).
 
-- [ ] **sinonime: revizuiește ~50 de perechi `t=5` (co-apartenență la același arbore DEX)**
-
-  Blocantul dinaintea afișării lor. Aduc 38.321 de perechi și dau primul sinonim pentru
-  25.554 de cuvinte (+5,4 puncte pe banda 1k+), dar eșantionul e amestecat — `pârpolatic`,
-  `astatic`, `îhî`, `părtie` — fiindcă tovarășii de arbore sunt uneori variante grafice, nu
-  sinonime. E o judecată despre limbă, nu o măsurătoare. `ui.md` le ține stocate și
-  neafișate și le rezervă tratamentul vizual (muchie punctată în `--syn-tree`, sub type-1,
-  etichetate „din același cuib DEX"); tratamentul pregătit **nu** e permisiunea de a le
-  aprinde. `escalate.md` §6.
-
-- [x] **sinonime: re-măsoară dimensiunea lui `syn.db` după `edge.rank`** — măsurat 2026-08-17.
-
-  Cifra de ~10–11 MB din `findings.md` §8 a fost măsurată pe DDL-ul *fără* coloana `rank`,
-  fără `merge_scrape()`, fără type-5 — adăugate ulterior de `spec.md`'s build rules 6-7.
-  Construită literal (simetrizare ca al doilea pas de scriere, `sense_word` = SW ∪ TW),
-  baza a ieșit la **21–23 MB**, peste plafonul de 16 MB. Simetrizarea mutată la interogare
-  (`lookup_related()` unește sensul direct cu cel invers, în loc să dubleze rândurile la
-  construcție) a adus-o la **15,6 MB** — sub plafon, cu `sense_word`/`edge` exact cum le
-  descrie schema (o singură direcție pe rând). Vezi `tools/build_syn_db.py`'s
-  `build_relation_graph()` pentru explicația completă.
-
-- [ ] **sinonime: exemplul de "empty state" din `ui.md` (`celșag`) nu mai e gol**
-
-  `ui.md`'s landing/empty-state copy numește `celșag` ca exemplu de cuvânt fără sinonime —
-  adevărat față de graful `Relation` singur (`findings.md` §6 îl listează explicit printre
-  cele 524 de cuvinte doar-scrapate, absente din `Relation`), fals după ce scrapingul e
-  contopit: `celșag` chiar înseamnă „înșelăciune" și are 11 sinonime scrapate (`amăgire,
-  înșelare, înșelăciune, ...`). `tests/test_sinonime.js` folosește `acardiac` în loc
-  (cuvânt real, zero muchii). Dacă `ui.md` e revizuit, exemplul din text ar trebui înlocuit.
-
-- [ ] **sinonime: trecere prin cele 6 skin-uri × 2 teme, cu screenshot-uri**
-
-  Construit 2026-08-17, verificat doar programatic (noduri, texte, structura HTML) și cu
-  token-urile `--syn-node`/`--syn-edge`/`--syn-ant`/`--syn-tree` declarate o singură dată pe
-  `:root` (moștenesc tema automat prin indirecție `var()`, fără redeclarare în blocul dark).
-  Nu s-a făcut trecerea vizuală cu screenshot-uri pe care `ui.md` § Skins o cere explicit —
-  în special `govuk` (`--radius: 0`, masthead negru) și `registru` (`--accent` e cerneala
-  paginii, deci orice umplut cu `--accent` într-o zonă întunecată dispare, ca bug-ul
-  `.joc-mode.active`). Verifică și starea `.is-active` la (0,3,0) în toate cele 6.
+- [x] **sinonime: four entries (t=5 review, syn.db size, `celșag` empty state, visual pass)** moved to
+  the Sinonime project's `docs/BACKLOG.md` on 2026-10-06.
 
 - [ ] ascunde cuvinte care au în definiție 'vezi ...' + alt cuvânt care suna f similar?
 - [x] another data quality run? – use more input sources?

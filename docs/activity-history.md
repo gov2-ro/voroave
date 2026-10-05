@@ -2,6 +2,29 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-06 — Synonym aid detached to its own project
+
+Moved the `/sinonime` writing aid to `~/devbox/sinonime`, with the history of the moved files
+(`git filter-repo`). That repo has its own README, CLAUDE.md, backlog and activity history,
+and reads this checkout's `data/` as read-only input (`OTIOS_DATA`).
+
+Removed here: `public/sinonime.php`, `api/syn.php`, `api/_syn.php`, `api/_syn_check.php`,
+`api/_partials/syn_*.php`, `assets/syn.js`, the SINONIME section and `--syn-*` tokens in
+`app.css`, `tools/build_syn_db.py`, `extract_relations.py`, `docs/sinonime/`,
+`docs/fixes/F01-synonym-deployment.md`, and the four sinonime test files. Also removed the
+detail panel's „vezi în sinonime →” link with its CSS, the `despre.html` „vezi și” link,
+`/sinonime` from `tests/test_statistics_route.js`, and the two suites and `syn.db` staging
+from `tools/run_tests.py`.
+
+`scrape_synonyms.py` stays, because it feeds `words.synonyms`. Its `--gap` mode read the
+synonym aid's `relations.db` and `syn.db`, so it was removed. Sinonime's
+`tools/gap_words.py` now writes the list, and `--input` reads it. A dry run with that list
+resumed the existing gap checkpoint (12,723 of 22,107 done). The `--gap`-only delay floor
+of 0.8 s is gone; the floor is 1.2 s for every run.
+
+Moved backlog entries: F01 and four sinonime items. The deploy item now says to delete the
+old synonym files from the server, because `rsync` without `--delete` leaves them live.
+
 ## 2026-10-05 — Session close: resume list and version tags
 
 Created local annotated tags `v0.2.0` to `v0.6.0` for the F01–F10 work, the alpha backlog and the spot-check tools.
