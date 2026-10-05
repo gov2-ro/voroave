@@ -1,6 +1,6 @@
 # F06 — Repair About-page preference initialization
 
-Status: open. Priority: P2.
+Status: complete (local verification 2026-10-05). Priority: P2.
 
 ## Evidence and target
 

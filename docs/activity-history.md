@@ -2,6 +2,26 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F06 About-page preference boot script
+
+Reproduction (Chromium via Playwright, static copy of `public/despre.html`): `pageerror: Unexpected end of
+input`. With saved dark/brutal/125 the page showed `data-theme` null, skin `govuk`, empty font size. The
+`//` comment in the one-line script swallowed the rest of it.
+
+Fix: rewrote the boot script in `public/despre.html`. The comment is gone. Same keys, same baked skin list
+(it matches the six skins in `public/assets/skins/` plus `paper`), same default skin `govuk`. It now also
+accepts only `dark` as a theme (else light) and only a number from 50 to 300 as a text scale (else 100),
+so invalid stored values give safe defaults. `public/metodologie.html` uses a block comment and parses;
+it was not changed. It has no skin logic by design.
+
+Tests: new `tests/test_static_pages.js`, added to the runner. Part A parses every inline executable script
+in `public/*.html` (JSON-LD and `src` scripts skipped). Part B drives `/despre.html` in Chromium: default,
+saved dark+brutal+125%, every shipped skin, invalid values, and a throwing `localStorage`. Without the fix
+13 checks fail. Full runner: 24/24 suites pass; `private/app.db` unchanged (`1791208393 1531904`).
+
+Not done: no live check. Local verification only. Limitation: with unavailable storage `data-theme` stays
+unset and CSS supplies the light theme.
+
 ## 2026-10-05 — F04 statistics route /statistici
 
 Reproduction (local, scratch copy with the HEAD router and `.htaccess`): `/statistici` returned 404;

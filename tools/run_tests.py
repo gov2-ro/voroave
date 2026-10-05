@@ -94,6 +94,8 @@ SUITES = [
           ("ui_db", "browser"), 300),
     Suite("js dict tooltip (browser)", "js", "tests/test_dict_tooltip.js", "built",
           ("ui_db", "browser"), 300),
+    Suite("js static pages + About prefs (F06)", "js", "tests/test_static_pages.js", "synthetic",
+          ("browser",), 120),
     Suite("js footer metrics (browser)", "js", "tests/test_footer_metrics.js", "built",
           ("ui_db", "browser"), 900),
 ]

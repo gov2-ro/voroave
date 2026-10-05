@@ -39,7 +39,7 @@ An old note is not a current measurement. Do not duplicate the same task in seve
   verify navigation and canonical URLs. Review hosting-report access as a separate owner operation.
   Local patch done 2026-10-05 (`/statistici`, tests, Apache check). Open: live check after deploy and the owner's report-access review.
 
-- [ ] **P2: `/despre` has an invalid preference boot script.** [Implementation brief](fixes/F06-about-preferences.md). In
+- [x] **P2: `/despre` has an invalid preference boot script.** (done 2026-10-05, local verification only) [Implementation brief](fixes/F06-about-preferences.md). In
   `public/despre.html:25`, a `// before 2026-08-14` comment consumes the rest of
   the single-line script. Chromium reports a syntax error. Remove the comment
   or use a block comment. Verify saved theme, skin, and text scale on direct arrival.

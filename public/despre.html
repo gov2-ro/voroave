@@ -22,7 +22,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script>(function () { try { var d = document.documentElement; var t = localStorage.getItem("otios.theme") || "light"; // before 2026-08-14: || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") d.setAttribute("data-theme", t); var ok = ["paper", "brutal", "govuk", "registru", "tezaur", "velin"], s = localStorage.getItem("otios.skin"); d.setAttribute("data-skin", ok.indexOf(s) >= 0 ? s : "govuk"); var z = localStorage.getItem("otios.textscale") || "100"; d.style.fontSize = z + "%"; } catch (e) { } })();</script>
+  <script>(function () { try { var d = document.documentElement; var t = localStorage.getItem("otios.theme"); d.setAttribute("data-theme", t === "dark" ? "dark" : "light"); var ok = ["paper", "brutal", "govuk", "registru", "tezaur", "velin"], s = localStorage.getItem("otios.skin"); d.setAttribute("data-skin", ok.indexOf(s) >= 0 ? s : "govuk"); var z = parseFloat(localStorage.getItem("otios.textscale")); d.style.fontSize = (z >= 50 && z <= 300 ? z : 100) + "%"; } catch (e) { } })();</script>
   <title>Despre — Voroave</title>
   <meta name="description"
     content="Cum sunt găsite cuvintele uitate ale limbii române: două corpusuri, dicționarul DEX, și marcajele cititorilor. 18.270 de cuvinte.">
