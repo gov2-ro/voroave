@@ -2,7 +2,7 @@
 # (it is a 20 MB download and the -wal/-shm siblings leak in-flight writes).
 # User data lives in app.db outside the web root entirely — see api/_appdb.php.
 
-<FilesMatch "\.(db|db-wal|db-shm|sqlite|sqlite3)$">
+<FilesMatch "\.(db|db-wal|db-shm|sqlite|sqlite3|lock|tmp)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>

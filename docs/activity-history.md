@@ -2,6 +2,29 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F08 Atomic UI database build
+
+Reproduction (scratch dir, tmp output holding `GOOD`): `build()` with a shortlist missing the `word` column raised
+`KeyError`. The old `ui.db` was gone and a partial SQLite file stood in its place.
+
+Fix: `tools/build_ui_db.py` now builds into `ui.db.build-*.tmp` beside the output, checkpoints and switches it to
+DELETE mode, validates it, then `os.replace`s it. Validation covers integrity, tables, columns, indexes, minimum
+size (default 10,000 words; `--min-words`), unique `word_id`, registry agreement and a 50% shrink guard.
+Two `flock` locks (`<registry>.lock`, `<out>.lock`) stop concurrent builders. A non-empty stale `-wal` stops the
+build (`--discard-stale-wal`); empty sidecars are removed before the replace. Input policy: required vs optional
+inputs, `--allow-missing-inputs` (see `docs/ui-db-build.md`). The builder now takes `Inputs`, `registry_path`
+and similar parameters with the old defaults. `tools/word_ids.py` gained `registry_lock` and a single-write fsynced append.
+`public/data/.htaccess` also denies `.lock` and `.tmp`.
+
+Validation: `tests/test_build_atomic.py` (26 tests, tiny fixtures, tmp paths only): failure injection in row load,
+enrichment, ID assignment, finalize and validation keeps the old output byte-identical with no leftovers;
+rebuild keeps word-to-id pairs; identical rebuild leaves the registry byte-identical; empty/small/shrunk builds
+and missing required inputs are rejected; stale sidecars; lock refusal; 4 concurrent processes give unique ids.
+Local only. No production rebuild, no real `ui.db` or registry touched.
+
+Limitations: the registry is not part of the atomic swap. Failed builds can leave unused appended ids (harmless).
+A torn registry tail from a crash mid-append is not repaired automatically.
+
 ## 2026-10-05 — F06 About-page preference boot script
 
 Reproduction (Chromium via Playwright, static copy of `public/despre.html`): `pageerror: Unexpected end of

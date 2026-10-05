@@ -56,9 +56,11 @@ python extract_meanings.py
 python tools/build_ui_db.py
 ```
 
+The build is atomic and locked. It keeps the old `ui.db` until a validated candidate replaces it.
+See `docs/ui-db-build.md` for the input policy, flags and ID-registry rules.
+
 Inflection aggregation is required for credible lemma judgments.
 The validator currently falls back when its map is missing; do not treat that degraded output as equivalent.
-The builder currently replaces its output destructively; F08 specifies a safe replacement path.
 Until F08 lands, preserve the last good artifact before rebuilding.
 `data/word_ids.tsv` is append-only. Verify no existing ID is removed, changed, or assigned to another word.
 Never run a rebuild or ID migration merely to execute tests.

@@ -3,11 +3,22 @@
 
 Run from repo root:
     python tools/build_ui_db.py
+
+The build is all-or-nothing. It writes a candidate database to a unique temporary file
+beside the output, validates it, and replaces the output with one atomic `os.replace`.
+A failure at any step leaves the previous output untouched. See `build()` and
+`docs/ui-db-build.md` for the input policy, locking and ID-registry failure rules.
 """
+import argparse
+import contextlib
 import csv
+import dataclasses
+import fcntl
+import os
 import re
 import sqlite3
 import sys
+import tempfile
 from collections import Counter
 from pathlib import Path
 
@@ -17,8 +28,9 @@ except ImportError:
     _zipf = None
 
 sys.path.insert(0, str(Path(__file__).parent))
+import word_ids as _word_ids
 from word_ids import apply_to_db as _apply_word_ids
-from editorial import apply_to_db as _apply_editorial
+from editorial import apply_to_db as _apply_editorial, EDITORIAL_PATH
 
 # The modern-usage bands are the pipeline's own thresholds, not new numbers — imported
 # rather than copied so that rescaling stays in one place. See mark_modern_band().
@@ -40,7 +52,17 @@ DEFINITIONS_PATH = Path('data/processed/definitions.db')
 DICT_SOURCES_PATH = Path('data/processed/dict_sources.db')
 SYNONYMS_PATH     = Path('data/processed/synonyms.db')
 MEANINGS_PATH     = Path('data/processed/meanings.db')
+LEXEMES_PATH      = Path('data/processed/lexemes.db')
+FREQ_PATH         = Path('data/processed/corpus_frequencies.db')
+INFLECTED_PATH    = Path('data/processed/inflected_forms.db')
 OUT_PATH        = Path('public/data/ui.db')
+
+# A production build holds ~18k words. Below this, `build()` refuses to publish unless the
+# caller passes a lower `min_words` (tests do; the CLI has `--min-words`).
+MIN_WORDS_DEFAULT = 10_000
+# A candidate smaller than this share of the previous output is refused (a truncated
+# shortlist would otherwise replace a good database). `allow_shrink=True` overrides.
+SHRINK_FLOOR = 0.5
 
 _ETYM_JUNK = {'vezi', 'cf.', 'după', 'după unii', 'probabil', 'cuvânt',
               'necunoscută', 'de la', 'sau'}
@@ -994,15 +1016,288 @@ def mark_modern_band(conn: sqlite3.Connection, freq_db: Path) -> None:
     print('  ' + ' · '.join(f'{labels[b]}: {counts.get(b, 0):,}' for b in (0, 1, 2)))
 
 
-def build(shortlist: Path, rare: Path, web: Path, defs: Path, out: Path) -> None:
+class BuildError(RuntimeError):
+    """The build stopped before publishing. The previous output is untouched."""
+
+
+@dataclasses.dataclass(frozen=True)
+class Inputs:
+    """Every file the build reads besides the shortlist, with its policy.
+
+    `required` inputs must exist for a production build: without one, a scored flag or
+    a hide-control silently changes what visitors see. `optional` inputs add a section
+    the app renders only when present. `allow_missing_inputs=True` (CLI
+    `--allow-missing-inputs`) turns a missing required input into a warning; tests and
+    partial checkouts use it.
+    """
+    web: Path = WEB_PATH
+    defs: Path = DEFINITIONS_PATH
+    dict_sources: Path = DICT_SOURCES_PATH
+    synonyms: Path = SYNONYMS_PATH
+    meanings: Path = MEANINGS_PATH
+    lexemes: Path = LEXEMES_PATH
+    freq: Path = FREQ_PATH
+    inflected: Path = INFLECTED_PATH
+    editorial: Path = EDITORIAL_PATH
+
+    REQUIRED = ('defs', 'dict_sources', 'lexemes', 'freq', 'inflected')
+    OPTIONAL = ('web', 'synonyms', 'meanings', 'editorial')
+
+    def missing(self) -> tuple[list[str], list[str]]:
+        """Return (missing required names, missing optional names)."""
+        def gone(names):
+            return [f'{n}: {getattr(self, n)}' for n in names
+                    if not Path(getattr(self, n)).exists()]
+        return gone(self.REQUIRED), gone(self.OPTIONAL)
+
+
+# Columns, tables and indexes a candidate must have. The PHP app queries all of them.
+REQUIRED_TABLES = ('words', 'vocab', 'senses', 'sense_citations')
+REQUIRED_WORD_COLUMNS = (
+    'word', 'word_normalized', 'dex_frequency', 'verdict', 'confidence_tier', 'log_ratio',
+    'hist_ppm', 'modern_ppm', 'subtitle_ppm', 'dex_pos', 'dex_register', 'dex_domain',
+    'dex_etymology', 'is_forgotten', 'has_definition', 'total_results', 'in_wild',
+    'web_score', 'top_url', 'last_seen_approx', 'provider', 'definition', 'word_tier',
+    'dict_count', 'zipf_frequency', 'en_zipf', 'proper_noun_like', 'sources', 'word_id',
+    'hist_occ', 'hist_docs', 'modern_occ', 'modern_docs', 'modern_occ_loose',
+    'family_ratio', 'rank_shift', 'newest_dict_year', 'in_current_dict', 'quality_score',
+    'seam', 'regional_only', 'variant_like', 'variant_of', 'diminutive_like',
+    'archaic_spelling', 'spelling_of', 'dex_variant', 'dex_variant_of', 'deverbal_like',
+    'deverbal_of', 'synonyms', 'antonyms', 'editor_pick', 'editor_demote', 'modern_band',
+    'dex_etymon',
+)
+REQUIRED_INDEXES = (
+    'idx_words_word_id', 'idx_vocab_kind', 'idx_words_verdict', 'idx_words_tier',
+    'idx_words_word_tier', 'idx_words_word', 'idx_words_modern', 'idx_words_normalized',
+    'idx_words_zipf', 'idx_words_default', 'idx_words_modern_occ', 'idx_words_editor',
+)
+_SIDECAR_SUFFIXES = ('-wal', '-shm', '-journal')
+
+
+def _sidecars(path: Path) -> list[Path]:
+    return [path.with_name(path.name + sfx) for sfx in _SIDECAR_SUFFIXES]
+
+
+def _remove_quietly(path: Path) -> None:
+    with contextlib.suppress(FileNotFoundError):
+        path.unlink()
+
+
+def _fsync_dir(directory: Path) -> None:
+    fd = os.open(str(directory), os.O_RDONLY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+@contextlib.contextmanager
+def _output_lock(out: Path):
+    """Exclusive non-blocking flock on `<out>.lock`; raises BuildError when held.
+
+    Same pattern as scrape_synonyms.acquire_host_lock: the kernel drops the lock when
+    the process dies, and the pid inside is only read back to name the holder.
+    """
+    lock_path = out.with_name(out.name + '.lock')
+    handle = lock_path.open('a+', encoding='utf-8')
+    try:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            handle.seek(0)
+            holder = handle.read().strip() or 'holder unknown'
+            raise BuildError(f'another build holds {lock_path} ({holder})') from None
+        handle.seek(0)
+        handle.truncate()
+        handle.write(f'pid {os.getpid()}\n')
+        handle.flush()
+        yield
+    finally:
+        handle.close()
+
+
+def finalize_candidate(path: Path) -> None:
+    """Make the candidate one self-contained file.
+
+    Checkpoints the WAL into the main file, then switches the journal mode to DELETE.
+    The mode lives in the file header, so the published database needs no `-wal` or
+    `-shm` sidecar and a reader never replays a log that belongs to another file.
+    """
+    conn = sqlite3.connect(str(path))
+    try:
+        conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+        mode = conn.execute('PRAGMA journal_mode=DELETE').fetchone()[0]
+        if mode.lower() != 'delete':
+            raise BuildError(f'could not switch the candidate to DELETE mode (got {mode})')
+        conn.execute('VACUUM')
+    finally:
+        conn.close()
+    leftovers = [p for p in _sidecars(path) if p.exists()]
+    if leftovers:
+        raise BuildError(f'candidate still has sidecars: {[p.name for p in leftovers]}')
+
+
+def validate_candidate(path: Path, registry_path: Path, *, min_words: int,
+                       previous: Path | None = None, allow_shrink: bool = False) -> int:
+    """Check a finished candidate. Return its word count; raise BuildError on any defect."""
+    with open(path, 'rb') as f:
+        header = f.read(100)
+    if header[:16] != b'SQLite format 3\x00':
+        raise BuildError('candidate is not an SQLite database')
+    if header[18] != 1 or header[19] != 1:
+        raise BuildError('candidate is not in DELETE journal mode (header says WAL)')
+
+    conn = sqlite3.connect(f'file:{path}?mode=ro', uri=True)
+    try:
+        problems = [r[0] for r in conn.execute('PRAGMA integrity_check')]
+        if problems != ['ok']:
+            raise BuildError(f'integrity_check failed: {problems[:3]}')
+
+        tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        missing = [t for t in REQUIRED_TABLES if t not in tables]
+        if missing:
+            raise BuildError(f'missing tables: {missing}')
+        cols = {r[1] for r in conn.execute('PRAGMA table_info(words)')}
+        missing = [c for c in REQUIRED_WORD_COLUMNS if c not in cols]
+        if missing:
+            raise BuildError(f'words is missing columns: {missing}')
+        indexes = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='index'")}
+        missing = [i for i in REQUIRED_INDEXES if i not in indexes]
+        if missing:
+            raise BuildError(f'missing indexes: {missing}')
+
+        total, with_id, distinct_ids = conn.execute(
+            'SELECT COUNT(*), COUNT(word_id), COUNT(DISTINCT word_id) FROM words').fetchone()
+        if total == 0:
+            raise BuildError('candidate has no words')
+        if total < min_words:
+            raise BuildError(f'candidate has {total:,} words, below the minimum {min_words:,} '
+                             f'(use --min-words for an intentionally small build)')
+        if with_id != total:
+            raise BuildError(f'{total - with_id} words have no word_id')
+        if distinct_ids != total:
+            raise BuildError('word_id values are not unique')
+
+        registry = _word_ids.load_registry(registry_path)
+        wrong = [w for w, i in conn.execute('SELECT word, word_id FROM words')
+                 if registry.get(w) != i]
+        if wrong:
+            raise BuildError(f'{len(wrong)} word ids differ from the registry, e.g. {wrong[:3]}')
+    finally:
+        conn.close()
+
+    if previous is not None and previous.exists() and not allow_shrink:
+        try:
+            pconn = sqlite3.connect(f'file:{previous}?mode=ro', uri=True)
+            try:
+                old_total = pconn.execute('SELECT COUNT(*) FROM words').fetchone()[0]
+            finally:
+                pconn.close()
+        except sqlite3.Error:
+            old_total = 0        # an unreadable previous output is no baseline
+        if old_total and total < old_total * SHRINK_FLOOR:
+            raise BuildError(f'candidate has {total:,} words, under {SHRINK_FLOOR:.0%} of the '
+                             f'previous output ({old_total:,}); use --allow-shrink if intended')
+    return total
+
+
+def build(shortlist: Path, rare: Path | None, web: Path | None, defs: Path | None,
+          out: Path, *,
+          inputs: Inputs | None = None,
+          registry_path: Path = _word_ids.REGISTRY_PATH,
+          min_words: int = MIN_WORDS_DEFAULT,
+          allow_missing_inputs: bool = False,
+          allow_shrink: bool = False,
+          discard_stale_wal: bool = False) -> None:
+    """Build `out` atomically.
+
+    Steps: take the registry and output locks; build a candidate in a unique temp file
+    in `out`'s directory; checkpoint it into a self-contained DELETE-mode file;
+    validate it; then `os.replace` it over `out`. Any failure removes the temp file and
+    leaves the previous `out` byte-identical. `rare` is unused (kept for the old
+    signature); `web` and `defs` override `inputs` for the same reason.
+
+    **ID registry.** `data/word_ids.tsv` is append-only and is NOT part of the atomic
+    swap. Ids are appended while the candidate is being built. If the build fails
+    later, the appended ids stay in the registry and no database uses them yet. That is
+    harmless: the next build reuses them. A registry id is never removed or changed.
+    There is no two-file transaction.
+
+    **Stale sidecars.** A `-wal` or `-shm` file beside the old output belongs to the
+    old file. A new DELETE-mode database next to an old `-wal` can be corrupted by
+    replay. Empty sidecars are removed just before the replace. A non-empty `-wal`
+    holds committed data of the old file, so the build refuses unless
+    `discard_stale_wal=True`.
+    """
+    shortlist, out, registry_path = Path(shortlist), Path(out), Path(registry_path)
+    inputs = inputs or Inputs()
+    if web is not None:
+        inputs = dataclasses.replace(inputs, web=Path(web))
+    if defs is not None:
+        inputs = dataclasses.replace(inputs, defs=Path(defs))
     if not shortlist.exists():
-        sys.exit(f'Missing: {shortlist}')
+        raise BuildError(f'Missing: {shortlist}')
+    missing_required, missing_optional = inputs.missing()
+    if missing_required and not allow_missing_inputs:
+        raise BuildError('required inputs are missing (use --allow-missing-inputs for a '
+                         'partial build):\n  ' + '\n  '.join(missing_required))
+    for m in missing_required:
+        print(f'  WARNING: required input missing, feature skipped: {m}')
+    for m in missing_optional:
+        print(f'  note: optional input missing, skipped: {m}')
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    if out.exists():
-        out.unlink()
+    tmp: Path | None = None
+    with _word_ids.registry_lock(registry_path):
+        with _output_lock(out):
+            # Under the lock no other builder runs, so any build temp left here is an
+            # orphan from a killed run.
+            for orphan in out.parent.glob(out.name + '.build-*'):
+                _remove_quietly(orphan)
+            fd, tmp_name = tempfile.mkstemp(prefix=out.name + '.build-', suffix='.tmp',
+                                            dir=str(out.parent))
+            os.close(fd)
+            tmp = Path(tmp_name)
+            try:
+                conn = sqlite3.connect(str(tmp))
+                try:
+                    _populate(conn, shortlist, inputs, registry_path)
+                    conn.commit()
+                finally:
+                    conn.close()
+                finalize_candidate(tmp)
+                total = validate_candidate(tmp, registry_path, min_words=min_words,
+                                           previous=out, allow_shrink=allow_shrink)
+                with open(tmp, 'rb') as f:
+                    os.fsync(f.fileno())
+                _clear_stale_sidecars(out, discard_stale_wal)
+                os.replace(tmp, out)
+                tmp = None
+                _fsync_dir(out.parent)
+            finally:
+                if tmp is not None:
+                    _remove_quietly(tmp)
+                    for sc in _sidecars(tmp):
+                        _remove_quietly(sc)
 
-    conn = sqlite3.connect(str(out))
+    size_mb = out.stat().st_size / 1024 / 1024
+    print(f'Done → {out}  ({total:,} words, {size_mb:.1f} MB)')
+
+
+def _clear_stale_sidecars(out: Path, discard_stale_wal: bool) -> None:
+    """Remove `-wal`/`-shm`/`-journal` files of the OLD output just before the replace."""
+    wal = out.with_name(out.name + '-wal')
+    if wal.exists() and wal.stat().st_size > 0 and not discard_stale_wal:
+        raise BuildError(f'{wal} is not empty: the previous output has uncheckpointed data. '
+                         'Open it once with sqlite3 to checkpoint, or use --discard-stale-wal.')
+    for sc in _sidecars(out):
+        _remove_quietly(sc)
+
+
+def _populate(conn: sqlite3.Connection, shortlist: Path, inputs: Inputs,
+              registry_path: Path) -> None:
+    """Create every table and fill the candidate. Nothing here touches the output."""
+    web, defs = inputs.web, inputs.defs
     conn.execute('PRAGMA journal_mode=WAL')
     conn.execute("""
         CREATE TABLE words (
@@ -1230,30 +1525,28 @@ def build(shortlist: Path, rare: Path, web: Path, defs: Path, out: Path) -> None
     else:
         print(f'  (definitions DB not found, skipping: {defs})')
 
-    merge_dict_sources(conn, DICT_SOURCES_PATH)
-    merge_synonyms(conn, SYNONYMS_PATH)
+    merge_dict_sources(conn, inputs.dict_sources)
+    merge_synonyms(conn, inputs.synonyms)
     # Before every mark_* step below: they read words.definition, which this pass never
     # touches, so strictly it does not matter — but merges land before marks throughout
     # this file, and mark_deverbal_nouns() still has to run last regardless.
-    merge_senses(conn, MEANINGS_PATH)
+    merge_senses(conn, inputs.meanings)
 
     # After the definitions merge, not before — half the signal is the definition text.
-    mark_diminutives(conn, Path('data/processed/lexemes.db'))
-    mark_archaic_spellings(conn, Path('data/processed/corpus_frequencies.db'))
+    mark_diminutives(conn, inputs.lexemes)
+    mark_archaic_spellings(conn, inputs.freq)
     # After mark_archaic_spellings, never before: the two flags are disjoint and the
     # regex rules get first claim on the 127 words both would take.
-    mark_dex_variants(conn, Path('data/processed/lexemes.db'),
-                      Path('data/processed/corpus_frequencies.db'),
-                      Path('data/processed/inflected_forms.db'))
+    mark_dex_variants(conn, inputs.lexemes, inputs.freq, inputs.inflected)
     # Last of the mark_* steps, and it has to stay last: it reads the flags the three
     # above set, to check the base verb is visible before hiding the noun behind it.
     mark_deverbal_nouns(conn)
     print('Bucketing modern usage…')
-    mark_modern_band(conn, Path('data/processed/corpus_frequencies.db'))
+    mark_modern_band(conn, inputs.freq)
 
     # Must run before the vocab table is built, or the POS dropdown lists the old
     # taxonomy-derived values that almost nothing matches.
-    lexemes_for_pos = Path('data/processed/lexemes.db')
+    lexemes_for_pos = inputs.lexemes
     if lexemes_for_pos.exists():
         print('Deriving dex_pos from Lexeme.modelType…')
         pos_map = load_pos_from_lexemes(lexemes_for_pos)
@@ -1293,7 +1586,7 @@ def build(shortlist: Path, rare: Path, web: Path, defs: Path, out: Path) -> None
     # nouns that happen to share a spelling with a surname or a place: `gheb` ("cocoașă")
     # was hidden because DEX also lists the name `Gheb`. Since these words are hidden by
     # default now, a false positive costs a real word rather than just a filter option.
-    lexemes_path = Path('data/processed/lexemes.db')
+    lexemes_path = inputs.lexemes
     if lexemes_path.exists():
         print('Computing proper_noun_like…')
         lconn = sqlite3.connect(str(lexemes_path))
@@ -1324,14 +1617,14 @@ def build(shortlist: Path, rare: Path, web: Path, defs: Path, out: Path) -> None
     # Curator picks and demotes. Like the word ids below, this runs after every insert
     # path has landed so a mark cannot miss the row it belongs to.
     print('Applying curator marks…')
-    picks, demotes, missing = _apply_editorial(conn)
+    picks, demotes, missing = _apply_editorial(conn, inputs.editorial)
     print(f'  {picks} pick, {demotes} demote'
           + (f' ({missing} in the file are not in this shortlist)' if missing else ''))
 
     # Permanent word ids for the compact ?w= share URLs. Runs last, so every
     # insert path (shortlist + rare-in-use) has landed and no word is missed.
     print('Assigning permanent word ids…')
-    print(f'  {_apply_word_ids(conn)} rows carry a word_id')
+    print(f'  {_apply_word_ids(conn, registry_path, hold_lock=False)} rows carry a word_id')
 
     # Indexes
     conn.execute('CREATE UNIQUE INDEX idx_words_word_id ON words(word_id)')
@@ -1352,13 +1645,30 @@ def build(shortlist: Path, rare: Path, web: Path, defs: Path, out: Path) -> None
     # adds `editor_demote = 0` to every query.
     conn.execute('CREATE INDEX idx_words_editor      ON words(editor_pick, editor_demote)')
 
-    conn.commit()
-    conn.close()
 
-    total = sqlite3.connect(str(out)).execute('SELECT COUNT(*) FROM words').fetchone()[0]
-    size_mb = out.stat().st_size / 1024 / 1024
-    print(f'Done → {out}  ({total:,} words, {size_mb:.1f} MB)')
+
+def main(argv: list[str] | None = None) -> None:
+    ap = argparse.ArgumentParser(description='Build ui.db atomically (see docs/ui-db-build.md).')
+    ap.add_argument('--out', type=Path, default=OUT_PATH)
+    ap.add_argument('--registry', type=Path, default=_word_ids.REGISTRY_PATH,
+                    help='permanent word-id registry (append-only)')
+    ap.add_argument('--min-words', type=int, default=MIN_WORDS_DEFAULT,
+                    help='refuse to publish a build with fewer words')
+    ap.add_argument('--allow-missing-inputs', action='store_true',
+                    help='warn instead of stopping when a required input is missing')
+    ap.add_argument('--allow-shrink', action='store_true',
+                    help='allow a build under half the size of the current output')
+    ap.add_argument('--discard-stale-wal', action='store_true',
+                    help='replace an output that has a non-empty -wal file')
+    a = ap.parse_args(argv)
+    try:
+        build(SHORTLIST_PATH, RARE_PATH, WEB_PATH, DEFINITIONS_PATH, a.out,
+              registry_path=a.registry, min_words=a.min_words,
+              allow_missing_inputs=a.allow_missing_inputs, allow_shrink=a.allow_shrink,
+              discard_stale_wal=a.discard_stale_wal)
+    except (BuildError, _word_ids.RegistryLocked) as e:
+        sys.exit(f'build_ui_db: {e}')
 
 
 if __name__ == '__main__':
-    build(SHORTLIST_PATH, RARE_PATH, WEB_PATH, DEFINITIONS_PATH, OUT_PATH)
+    main()

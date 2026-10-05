@@ -57,7 +57,7 @@ An old note is not a current measurement. Do not duplicate the same task in seve
   The quiz DOM suite skips successfully when `jsdom` is missing. Declare JS test
   dependencies, use durable fixtures, and make required-suite skips visible.
 
-- [ ] **P2: Build `ui.db` through a validated temporary artifact.** [Implementation brief](fixes/F08-atomic-build.md).
+- [x] **P2: Build `ui.db` through a validated temporary artifact.** *Local fix done 2026-10-05 (temp candidate, validation, locks, atomic replace; `docs/ui-db-build.md`); no production rebuild run.* [Implementation brief](fixes/F08-atomic-build.md).
   `tools/build_ui_db.py:1003` unlinks the previous output before building its replacement.
   A later failure leaves a partial build and removes the last good artifact.
   Validate required inputs, schema, integrity, and stable IDs before replacing the output.

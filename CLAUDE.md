@@ -312,7 +312,7 @@ word, word_no_accent, frequency, rarity_category, description, model_type, notes
 
 `id<TAB>word`, 1-based, **append-only**. Tracked in git on purpose (`.gitignore` negates it
 out of the blanket `data/*` rule) because it is the only file that makes `?w=` links
-durable: `ui.db` is deleted and rebuilt on every data refresh, so an id derived from row
+durable: `ui.db` is rebuilt (replaced atomically) on every data refresh, so an id derived from row
 order or a rowid would silently repoint every link ever shared.
 
 Three rules, all load-bearing:

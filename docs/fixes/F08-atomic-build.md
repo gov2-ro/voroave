@@ -1,6 +1,6 @@
 # F08 — Publish only validated UI database builds
 
-Status: open. Priority: P2.
+Status: complete locally 2026-10-05 (acceptance checks pass in `tests/test_build_atomic.py`; no production rebuild was run). Priority: P2.
 
 ## Evidence and target
 
