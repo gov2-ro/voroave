@@ -2,6 +2,15 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — Public alpha readiness backlog
+
+Added a "Public alpha readiness" section to `docs/BACKLOG.md`.
+It records the owner's sequence: full-featured MVP, dexonline permission request, final tests, public alpha.
+It tracks the planned move of the synonym sub-project to `~/devbox/si9ni.me/` and the dexonline licence source list.
+It also tracks the launch prerequisites: `/stats` access, off-machine backups, production configuration,
+account disclosure, licence and contributing files, a contributor sample database, and server git maintenance.
+The owner confirmed that the deployed `/.git/config` is not public.
+
 ## 2026-10-05 — F10 Recovery proposal and backup runbook
 
 Status: proposal and runbook ready for owner decision; operational checks need access. Planning only. No account merged, no Google account connected, no credential rotated, no scheduled job changed, no production restore.

@@ -70,6 +70,43 @@ An old note is not a current measurement. Do not duplicate the same task in seve
   Current README/guide, dated historical notes, corrected public methodology, and F01–F10 handoff.
   Application fixes and operational verification remain open.
 
+### Public alpha readiness — 2026-10-05
+
+The owner's sequence: build a full-featured MVP first. Use it to ask dexonline for permission.
+Then run a final test round, launch a public alpha, and ask for contributions.
+
+- [ ] **Detach the synonym sub-project (`sinonime`) to `~/devbox/si9ni.me/`.** The owner plans a separate project.
+  Candidate files to move: `public/sinonime.php`, `public/api/syn.php`, `public/api/_syn.php`,
+  `public/api/_syn_check.php`, `public/api/_partials/syn_*.php`, `public/assets/syn.js`,
+  `tools/build_syn_db.py`, `docs/sinonime/`, `tests/test_sinonime*.js`, `tests/test_build_syn_db.py`,
+  and the two `sinonime` suites in `tools/run_tests.py`.
+  `extract_relations.py` and `scrape_synonyms.py` also feed `ui.db` (`words.synonyms`, `words.antonyms`).
+  Keep them here, or decide how the new project gets `relations.db`. Do not duplicate the extractor silently.
+  Remove the `sinonime` navigation entry and any links to it, and check `NAV_ITEMS`, `despre.html` and the sitemap.
+  The F01 live outage moves with the sub-project. Until the split, hide the entry or deploy `syn.db`.
+  Note: `sync.php` and `test_store_sync*.js` match the same filename pattern; they are annotation sync and stay.
+
+- [ ] **dexonline licence: list the sources that are not open.** See <https://dexonline.ro/license>.
+  The owner handles this after the MVP exists, as part of the permission request.
+  List every dictionary source whose text the site displays (`words.definition`, senses, citations,
+  DCR2/DCR3 copies, scraped definitions and synonyms). Mark each one as open or not open under that licence.
+  Record what the site would hide or attribute for each source that is not open.
+  The dataset-release blocker in "Earlier findings" (DEX dump, CulturaX, LUMRO) is related; link it, do not duplicate it.
+
+- [x] **The deployed `.git/` is not public.** Checked by the owner on 2026-10-05: `/.git/config` is not served.
+- [ ] **Restrict the hosting provider's `/stats` traffic report.** Owner operation; see F04.
+- [ ] **Get a backup copy off the server** before strangers contribute data. See F10's runbook.
+- [ ] **Check the production configuration.** `OTIOS_ADMIN_TOKEN` is set, so `admin.php` moderation works.
+  `OTIOS_PRIVATE_DIR` must be outside the web root.
+- [ ] **Say on the site that the browser is the account.** A cleared cookie loses marks and lists.
+  No recovery exists until F10 is decided. An alpha can accept this only if visitors are told.
+- [ ] **Add a `LICENSE` and a short `CONTRIBUTING.md`.** The repo has neither. Without a licence,
+  nobody may legally reuse or change the code. Cover dev setup and the strict runner.
+- [ ] **Give contributors a small sample `ui.db`.** Most JS suites need the built database, and the build
+  needs the 1.65 GB dump. Provide a small committed fixture or a downloadable sample, subject to the licence item above.
+- [ ] **Server git maintenance.** The shared host limits threads, so the automatic `git gc` after a pull fails
+  with "unable to create thread". On the server run `git config pack.threads 1` and remove `.git/gc.log`.
+
 ### Earlier findings
 
 - [ ] **`.fp-dicts` (the "în N dicționare" row) can sit below `.fp-body`'s scrollable
