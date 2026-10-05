@@ -10,7 +10,7 @@
 const deps = require('./lib/deps');
 const { chromium } = deps.loadPlaywright('tests/test_ghici_browser.js');
 
-const BASE = process.env.OTIOS_TEST_URL || 'http://127.0.0.1:8011';
+const BASE = require('./lib/target').testBase('tests/test_ghici_browser.js');
 const SHOTS = process.env.OTIOS_SHOT_DIR || '';
 const WORD = 'abraș';
 

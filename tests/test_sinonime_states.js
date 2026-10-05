@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const BASE = process.env.OTIOS_TEST_URL;
+const BASE = require('./lib/target').testBase('tests/test_sinonime_states.js');
 const DATA = process.env.OTIOS_TEST_DATA_DIR;
 if (!BASE || !DATA) { console.log('FAIL  OTIOS_TEST_URL and OTIOS_TEST_DATA_DIR are required (use tools/run_tests.py)'); process.exit(1); }
 if (path.resolve(DATA) === path.resolve(__dirname, '..', 'public', 'data')) {

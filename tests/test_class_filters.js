@@ -7,7 +7,7 @@
 // columns** (variant_like / archaic_spelling / dex_variant) and that every superseded
 // spelling of the params that used to be their own rows still resolves onto it. A link
 // someone shared before the bundle must not silently stop filtering.
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_class_filters.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };

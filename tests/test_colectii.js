@@ -18,7 +18,7 @@
 //      in both breakdown chips.
 //   3. Marks still never subtract. Appearing on the „respinse" tab must not remove a word
 //      from the explorer, which is the invariant the whole community layer rests on.
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_colectii.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };

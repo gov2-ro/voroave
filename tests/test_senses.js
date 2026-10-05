@@ -12,7 +12,7 @@ const { execSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_senses.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };

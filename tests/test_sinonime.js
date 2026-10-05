@@ -4,7 +4,7 @@
 //   OTIOS_TEST_URL=http://localhost:8777 node tests/test_sinonime.js
 //
 // Read-only against public/data/syn.db. Never touches app.db.
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_sinonime.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };

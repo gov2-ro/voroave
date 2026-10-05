@@ -14,7 +14,7 @@
 // Also pins the row markup landing this same change depended on (§SEO plan, part 1):
 // a `.word-row` is now a real `<a href="…?word=…">`, not a bare div a crawler could
 // never follow.
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_share_seo.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };

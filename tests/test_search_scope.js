@@ -22,7 +22,7 @@
 //      search inside the list; the sheet says which is in force (setSearchMode, app.js).
 //   3. It stays scoped to `q`. With the box empty, the filters are back — this must not
 //      turn into "the filter sheet does nothing".
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_search_scope.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };

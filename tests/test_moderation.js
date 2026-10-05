@@ -9,7 +9,7 @@
 //
 // The admin-page checks are skipped unless OTIOS_ADMIN_TOKEN is set, so the suite
 // still runs on an install that has not configured moderation.
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_moderation.js');
 const ADMIN_TOKEN = process.env.OTIOS_ADMIN_TOKEN || '';
 
 function makeJar() {

@@ -16,7 +16,7 @@
 //      cheaper than publishing a list. They may only reorder.
 //   2. editor_demote subtracts only while `editorial=hide`, and never inside a
 //      playlist — a shared list of twenty words must not arrive as eleven.
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_editorial.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };

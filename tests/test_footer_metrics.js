@@ -20,7 +20,7 @@
 const deps = require('./lib/deps');
 const { chromium } = deps.loadPlaywright('tests/test_footer_metrics.js');
 
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_footer_metrics.js');
 const SKINS  = ['paper', 'brutal', 'govuk', 'registru', 'tezaur', 'velin'];
 const WIDTHS = [320, 390, 479, 540, 768];
 const SCALES = ['100', '125', '150'];

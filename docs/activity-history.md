@@ -2,6 +2,20 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — Test isolation guard after an app.db write
+
+During F03 diagnosis, an agent ran `tests/test_ghici.js` against a plain dev server.
+It set `OTIOS_PRIVATE_DIR` in the environment. `_appdb.php` ignores that variable and reads only `config.local.php`.
+The suite therefore wrote one anonymous device, quiz answers and marks into the dev `private/app.db`.
+The file grew from 1,503,232 to 1,531,904 bytes. It is a dev file, not production. The rows were not removed.
+The owner decides whether to prune them. The newest local backup is from 2026-08-14.
+
+Added `tests/lib/target.js`. Every server-backed JS suite now gets its URL from `testBase()`.
+`testBase()` exits 2 unless `OTIOS_TEST_URL` is set and `OTIOS_TEST_ISOLATED=1`.
+`tools/run_tests.py` sets the flag for its staged servers only.
+Validation: a direct `node tests/test_lists_api.js` run exits 2 with instructions.
+The full runner passes 20/20 suites. The protected files are unchanged.
+
 ## 2026-10-05 — F03 quiz: withhold the whole answer body until grading
 
 Local fix and tests. Not deployed. Live verification is open until the owner deploys.

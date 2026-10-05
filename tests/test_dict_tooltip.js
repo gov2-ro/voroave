@@ -20,7 +20,7 @@
 const deps = require('./lib/deps');
 const { chromium } = deps.loadPlaywright('tests/test_dict_tooltip.js');
 
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_dict_tooltip.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };

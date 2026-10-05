@@ -13,7 +13,7 @@ const vm   = require('vm');
 const fs   = require('fs');
 const path = require('path');
 
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_store_sync.js');
 const SRC  = fs.readFileSync(path.join(__dirname, '..', 'public', 'assets', 'store.js'), 'utf8');
 
 // Minimal cookie jar so a "device" keeps its identity across requests.

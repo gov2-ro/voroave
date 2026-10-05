@@ -9,7 +9,7 @@
 // real word fills the head, and that anything else falls back rather than reflecting
 // the URL — the params here are attacker-supplied and land in <title>, og:url and
 // rel=canonical.
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_share_meta.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };

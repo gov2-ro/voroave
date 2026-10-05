@@ -321,6 +321,7 @@ def run_suite(s: Suite, stage: Stage | None, token: str, allow_skips: bool, verb
         cmd = ["node", s.target]
         assert stage is not None
         env["OTIOS_TEST_URL"] = stage.url
+        env["OTIOS_TEST_ISOLATED"] = "1"
         env["OTIOS_ADMIN_TOKEN"] = token
         env["OTIOS_TEST_DATA_DIR"] = str(stage.public / "data")
         env["OTIOS_PRIVATE_DIR"] = str(stage.private)

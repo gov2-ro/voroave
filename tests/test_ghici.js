@@ -33,7 +33,7 @@ const { JSDOM, VirtualConsole } = require('./lib/deps').loadJsdom('tests/test_gh
 // F03: the pane's answer body (`.fp-body`) is withheld as ONE unit — `hidden` + `inert`
 // + `aria-hidden` — and revealed in full after grading, right or wrong. Late and stale
 // detail responses are controlled with `window.__detailHook` (see beforeParse below).
-const BASE = process.env.OTIOS_TEST_URL || 'http://127.0.0.1:8011';
+const BASE = require('./lib/target').testBase('tests/test_ghici.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };

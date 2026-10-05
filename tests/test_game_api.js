@@ -5,7 +5,7 @@
 //
 // Override the target with OTIOS_TEST_URL. Writes to the real app.db, so point it at
 // a dev instance, not production.
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_game_api.js');
 
 function makeJar() {
   const jar = {};

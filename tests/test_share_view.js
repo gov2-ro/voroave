@@ -22,7 +22,7 @@
 //
 // The sample words are read out of the API rather than hardcoded, so a rebuild that
 // reflags a word cannot turn this into a test of the fixture.
-const BASE = process.env.OTIOS_TEST_URL || 'http://localhost:8777';
+const BASE = require('./lib/target').testBase('tests/test_share_view.js');
 
 let failures = 0;
 const check = (ok, msg) => { if (!ok) failures++; console.log(`  ${ok ? 'PASS' : 'FAIL'}  ${msg}`); };
