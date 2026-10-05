@@ -1,9 +1,14 @@
 # Methodology v2 — broader moves (aspirational)
 
+> Status reconciled 2026-10-05. This is a historical menu, not the current implementation plan.
+> The corpus pipeline already includes paradigm rollup and two panels. The wordfreq shortcut
+> described below proved too coarse and was not retained in production. Evaluation remains open.
+> Use [F09](fixes/F09-evaluation.md) for a bounded next task; no scoring changes are authorized here.
+
 > **Scope note.** The user's actual goal for this project is pragmatic:
 > produce a defensible list of Romanian dictionary words that are not in
-> common modern use. That goal is largely covered by the `wordfreq` recipe
-> (`docs/wordfreq-recipe.md`) and a small subset of the items below. This
+> common modern use. The earlier proposed `wordfreq` recipe
+> (`docs/archive-obsolete/wordfreq-recipe.md`) is retained as historical reasoning. This
 > document captures the more ambitious methodological moves for future
 > reference. **Nothing here is required to ship a useful list.** Treat it as
 > a menu, not a spec.
@@ -201,9 +206,8 @@ meaningful 1-day version.
 - `docs/conceptual-roadmap.md` — the minimum credible methodology
   (lemmatization, ground truth from `înv.` markers, confidence intervals,
   diachronic baseline). Those are prerequisites for anything here.
-- `docs/wordfreq-recipe.md` — the **pragmatic** path that almost certainly
-  delivers what the user actually wants without any of the above.
-- `CLAUDE.md` — implementation backlog. Code-level fixes still needed
+- `docs/archive-obsolete/wordfreq-recipe.md` — historical shortcut rationale; measured coverage proved too coarse for the production ranking.
+- `docs/BACKLOG.md` — implementation backlog. Code-level fixes still needed
   regardless of which methodology layer you adopt.
 
 ## Throughline

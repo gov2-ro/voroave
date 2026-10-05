@@ -1,3 +1,6 @@
+> Historical research note. Archived on 2026-10-05. Neither frequency screen feeds the live ranking.
+> Current workflow: [scripts guide](../scripts-guide.md). Evaluation: [F09](../fixes/F09-evaluation.md).
+
 # wordfreq recipe — the pragmatic path
 
 > **Status (2026-08-11): this screen feeds nothing.** The `rare_in_use` tab it filled was

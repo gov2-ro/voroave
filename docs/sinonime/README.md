@@ -4,10 +4,10 @@ A second tool, separate from the oțios explorer: a Romanian **writing aid**. Ty
 get alternatives you could actually use, ranked by how alive each one is in modern
 Romanian. No definitions.
 
-**Status (2026-08-14): fully specified, not built.** Branch `sinonime` carries these four
-documents and nothing else. The UI was held back for a separate session; that session
-happened and its conclusions are in `ui.md`, so nothing is reserved any more — the whole
-tool can now be executed from these documents.
+**Status (2026-10-05): implemented and merged.** The page, relation extractor, database builder,
+and local acceptance tests exist. Live searches returned HTTP 500 during the audit.
+Track remediation in [F01](../fixes/F01-synonym-deployment.md); local passes do not close the live outage.
+The documents below retain the original measured design. Read them as implementation contracts, not unbuilt feature plans.
 
 | document | what it is |
 |---|---|

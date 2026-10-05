@@ -1,5 +1,12 @@
 # Oțios — UI Redesign Brief
 
+> Historical redesign brief. Reviewed 2026-10-05; it is not the current feature inventory.
+> Synonyms, public collections, server sync, structured senses, and the three-mark UI now exist.
+> The rare-in-use tab and Zipf/loanword filters were removed. Current row numbers show historical evidence.
+> Use [the README](../readme.md) for architecture and [audit briefs](fixes/README.md) for fixes.
+> The audience and readability goals remain useful; old control lists do not authorize rebuilding removed features.
+
+
 > Brief for a visual redesign of the Oțios web app, to be handed to a designer
 > ("Claude Designer"). The current app is a **functional reference only** — the
 > designer is free to propose a **fresh visual identity**. Priority: **mobile-first**.

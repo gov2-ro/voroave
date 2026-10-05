@@ -2,6 +2,58 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — Technical handoff and documentation reconciliation
+
+Prepared F01–F08 implementation briefs with scope, decisions, regression cases, and closure rules.
+Added F09 evaluation planning and F10 identity/backup planning boundaries.
+The handoff index includes assignment order, shared-file coordination, and a reusable agent prompt.
+No application fix or production operation was performed.
+
+Replaced obsolete current setup guidance with a current script guide and concise technical README.
+Archived the former script guide and the previously removed wordfreq recipe as historical material.
+Corrected references to the archived recipe. Retained the deletion at its former path.
+Marked old design/research proposals as historical. Corrected the synonym implementation status.
+Reconciled public methodology claims, verdict definitions, Zipf filter status, and dated local counts.
+Normalized rates remain valid units; unequal sampling resolution and register constrain inference.
+
+Added handoff navigation, portable-test caveats, and CodeGraph guidance to both agent instruction files.
+Preserved the owner's tone, version, and model-handoff instructions. Included AGENTS.md in the commit scope.
+Consolidated duplicate sync, evaluation, recovery, and backup tasks. Marked explicit closed decisions correctly.
+The operational and application briefs remain open.
+
+This documentation/specification deliverable establishes local version v0.1.0 because the repository has no existing local version tags.
+No release is published. Validation: all 222 current Python tests passed.
+Current-document link checks passed across the README, script guide, synonym index, and all ten briefs.
+The `constants.py` executable AST is unchanged; only its explanatory docstring changed.
+Scripts in the public documentation pages are unchanged. F06's script repair remains assigned, not implemented.
+
+
+## 2026-10-05 — Project and live-site audit
+
+Reviewed the current PHP app, corpus pipeline, methodology notes, README, and backlog.
+Used CodeGraph before locating code. Inspected nine live routes at desktop and mobile sizes.
+Used Playwright screenshots and focused HTTP checks. Production checks did not submit
+annotations, answers, profiles, or public lists. Normal page loads created anonymous device state.
+
+Recorded eight follow-ups at the top of `docs/BACKLOG.md`. Confirmed live synonym
+search failures, quiz answer exposure, the `/stats` hosting collision, the invalid
+About-page boot script, and shared-link definition differences. Reproduced the sync
+queue race with a delayed response and the actual client code. Server logs were
+unavailable, so the synonym failure's root cause remains unknown.
+
+Validation: `pytest tests -q` passed all 222 tests. Unscoped pytest produced 261
+passes and six failures in archived Flask tests. PHP syntax checks passed for 41 files.
+Twelve local API suites passed against an isolated temporary user database. The sync
+suite failed on missing hardcoded dictionary words. The quiz DOM suite skipped because
+`jsdom` was unavailable; moderation's authenticated admin checks also skipped.
+
+Confirmed live database downloads are forbidden, unauthenticated admin access returns
+404, and the backup endpoint returns 404 over HTTP. These checks do not establish a
+complete security audit or verify backup scheduling and recovery.
+
+No application code, generated datasets, deployments, commits, or tags were changed.
+Existing edits in the backlog and other files were preserved.
+
 ## 2026-08-18 — Detail panel: blur the list behind it, tint `.fp-head`
 
 Two small `public/assets/app.css` additions, on request, both pure CSS with no new JS:
@@ -292,7 +344,7 @@ Recommended name: brand **wROdfreq**, ship as `wrodfreq` (PyPI lowercases anyway
 
 Answering "how do we finally calculate our sorting index, and have we replicated
 wordfreq?" turned into a measurement worth keeping. Written up as a new closing section
-in `docs/wordfreq-recipe.md` (§1–8), whose 2021-era body — *adopt wordfreq instead of a
+in `docs/archive-obsolete/wordfreq-recipe.md` (§1–8), whose 2021-era body — *adopt wordfreq instead of a
 corpus pipeline* — is now flagged as superseded in the status banner with a pointer down.
 
 Three findings:
@@ -1772,7 +1824,7 @@ the `relevant` seam, and most are legitimate nominalised infinitives (`zimbire`,
 inert `en_zipf` column would be a schema migration for zero benefit; the rule that matters
 is written down instead.
 
-Also: `docs/wordfreq-recipe.md` now carries a status banner saying the screen feeds
+Also: `docs/archive-obsolete/wordfreq-recipe.md` now carries a status banner saying the screen feeds
 nothing, and the editorial marks were re-exported (13 pick / 191 demote in `app.db`, of
 which 12 and 176 exist in the rebuilt shortlist).
 
@@ -4349,7 +4401,7 @@ Added three new docs reflecting a deeper review of what the project is actually 
 - `docs/conceptual-roadmap.md` — reframes what "forgotten" should mean; critiques frequency-only approach; outlines Phase 3+ thinking
 - `docs/corpus-options.md` — catalog of open Romanian corpora beyond Wikipedia (OSCAR, CoRoLa, CC-100, etc.) with access notes
 - `docs/methodology-v2.md` — proposed revised methodology using wordfreq as primary signal
-- `docs/wordfreq-recipe.md` — concrete implementation recipe for the wordfreq path
+- `docs/archive-obsolete/wordfreq-recipe.md` — concrete implementation recipe for the wordfreq path
 
 Also updated `docs/corpus-options.md` with additional corpus details, and moved `PHASE2_COMPLETE.md` from root to `docs/`.
 

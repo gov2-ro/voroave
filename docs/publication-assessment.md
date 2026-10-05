@@ -1,6 +1,8 @@
 # Is this worth a paper?
 
-Assessment written 2026-08-11, in answer to exactly that question. Nothing here has been
+Assessment written 2026-08-11, in answer to exactly that question.
+Reconciled 2026-10-05: measurements below are historical; [F09](fixes/F09-evaluation.md) defines the next evaluation task.
+Normalized frequency is a valid unit. Unequal sampling resolution and corpus composition limit comparisons. Nothing here has been
 acted on — it is a note to pick at later, not a plan. It sits beside
 `docs/conceptual-roadmap.md` (the minimum credible methodology) and
 `docs/methodology-v2.md` (the wider menu), and largely restates their §2 and §5 as *the
@@ -41,7 +43,7 @@ cleanest demonstration already in hand.
 Four measured traps, each of which a competent team would fall into, and none of which
 anybody publishes:
 
-- **ppm across corpora that differ 1,187× is meaningless.** A shared `0.1 ppm` floor meant
+- **The old shared ppm absence gate was misleading across corpora that differ 1,187×.** A shared `0.1 ppm` floor meant
   "< 1,697 occurrences" modern and "≥ 1.43" historical. It classified `zapciu` (1,322
   modern hits) as extinct and put `vapor`, `fluviu` and `cioban` in "declining".
 - **A reference corpus is not a *modern* corpus if it spans 1945+.** CoRoLa wired into

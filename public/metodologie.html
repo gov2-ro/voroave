@@ -623,7 +623,8 @@
     <h1 style="display: inline-block">[🤖] De la dicționar la cuvinte uitate</h1> <sup>[<mark>LLM blabber</mark> – revizui-voi cândva 🤞]</sup>
     <p class="hero-sub">
       Un proiect de lingvistică computațională care identifică cuvintele „uitate" din
-      limba română: termeni prezenți în DEX Online dar absenți din orice corpus modern.
+      limba română: termeni din colecția dexonline, rari sau neobservați în corpusurile selectate.
+      Rezultatele sunt candidați pentru redescoperire, nu dovada că nimeni nu-i mai folosește.
       Această pagină explică sursa datelor, metodologia și deciziile din spatele rezultatelor.
     </p>
     <div class="stat-row">
@@ -639,8 +640,8 @@
       </div>
       <div class="stat-it">
         <div class="stat-lbl">Pe scurtlistă</div>
-        <div class="stat-num">17.577</div>
-        <div class="stat-meta">5 niveluri de încredere</div>
+        <div class="stat-num">18.270</div>
+        <div class="stat-meta">cuvinte în baza locală verificată la 05.10.2026</div>
       </div>
       <div class="stat-it">
         <div class="stat-lbl">Corpus modern</div>
@@ -679,8 +680,8 @@
   <section id="de-ce">
     <h2><span class="num">01</span> De ce acest proiect</h2>
     <p>
-      Limba română are sute de mii de cuvinte consemnate în DEX Online — dicționarul academic
-      de referință. Dar câte dintre ele mai există cu adevărat în uzul scris curent? Cuvinte
+      Limba română are sute de mii de cuvinte consemnate în colecția dexonline — o platformă comunitară
+      care reunește mai multe dicționare. Dar câte dintre ele mai există cu adevărat în uzul scris curent? Cuvinte
       precum <strong>tibișir</strong> (un tip de muselină), <strong>ietac</strong> (camera privată
       a boierului) sau <strong>bolboacă</strong> (oală de lut) există în dicționar, dar practic
       nu apar niciodată în textele actuale. Sunt, ca să împrumutăm un termen din astrofizică,
@@ -864,10 +865,10 @@ forgotten_words_curated.csv  <span class="gold">140.308 candidați</span></div>
       <code>vești</code>.
     </p>
 
-    <h3>De ce nu ppm</h3>
+    <h3>De ce am înlocuit pragul comun în ppm</h3>
     <p>
-      Cele două corpusuri diferă de <strong>1.187×</strong> ca mărime. Un prag exprimat în
-      <em>ppm</em> înseamnă lucruri complet diferite pe fiecare parte:
+      În comparația inițială, Wikisource și CulturaX diferă de <strong>1.187×</strong> ca mărime. Rata exprimată în
+      <em>ppm</em> are aceeași unitate, dar același prag corespunde unor numere de observații foarte diferite:
     </p>
     <div class="demo"><span class="dim">același prag, două înțelesuri</span>
 culturax_ro   16.969.999.321 tokens  →  0,1 ppm = <span class="gold">1.697 apariții</span>
@@ -876,13 +877,17 @@ wikisource_ro     14.297.033 tokens  →  0,1 ppm = <span class="gold">1,43 apar
 „absent din româna modernă" însemna deci <span class="gold">sub 1.697 de apariții web</span>.
 <code>zapciu</code> are 1.322 — și era clasificat <em>dispărut din uz</em>.</div>
     <p>
-      Pragurile sunt acum <strong>numere de apariții</strong>, iar comparația istoric-vs-modern se
-      face pe <strong>rangul procentual</strong> al cuvântului în fiecare corpus (<code>rank_shift</code>),
-      care nu depinde de mărimea corpusului. <code>log_ratio</code> rămâne calculat, pentru comparație.
+      Cele patru verdicte de pe listă folosesc acum <strong>numere de apariții</strong> și praguri de susținere istorică.
+      <strong>Rangul procentual</strong> (<code>rank_shift</code>) descrie poziția relativă în distribuție;
+      separă <code>alive</code> de <code>emerging</code> în validator și rămâne un indicator exploratoriu.
+      Rangurile nu elimină incertitudinea sau diferențele de registru.
+      <code>log_ratio</code> rămâne calculat, pentru comparație. Panelul istoric actual include și LUMRO: circa 19,4 milioane de tokens.
     </p>
 
     <h3>Verdictele</h3>
-    <p>Toate se calculează din numărătorile la nivel de paradigmă:</p>
+    <p>Toate se calculează din estimările la nivel de paradigmă. Pragurile moderne de 500/2.000
+      sunt calibrate la 16.969.999.321 tokens și se rescalează dacă panelul modern crește.
+      Numărătorile pe forme ambigue sunt împărțite; documentele sunt un indicator conservator de susținere:</p>
     <table class="data-table">
       <thead><tr><th>Verdict</th><th>Condiție</th></tr></thead>
       <tbody>
@@ -892,7 +897,7 @@ wikisource_ro     14.297.033 tokens  →  0,1 ppm = <span class="gold">1,43 apar
         </tr>
         <tr class="row-hist">
           <td>historical_only</td>
-          <td>atestat istoric, sub 500 de apariții moderne</td>
+          <td>atestat istoric, între 1 și 499 de apariții moderne la dimensiunea de referință</td>
         </tr>
         <tr class="row-dec">
           <td>declining</td>
@@ -900,7 +905,7 @@ wikisource_ro     14.297.033 tokens  →  0,1 ppm = <span class="gold">1,43 apar
         </tr>
         <tr class="row-abs">
           <td>absent</td>
-          <td>fără temei istoric (sub 3 apariții, sau într-un singur document) și rar azi — DEX susține singur cazul</td>
+          <td>susținere istorică insuficientă (sub 3 apariții sau sub 2 unități de document) și sub pragul modern de 2.000; nu înseamnă zero apariții</td>
         </tr>
         <tr>
           <td>alive / emerging</td>
@@ -959,7 +964,7 @@ wikisource_ro     14.297.033 tokens  →  0,1 ppm = <span class="gold">1,43 apar
       <em>țarțam</em>, <em>sărciner</em> — rare, dar niciodată cu adevărat în circulație.
     </p>
 
-    <h3 id="frecvente">Exponentul de lângă cuvânt, și cele două frecvențe filtrabile</h3>
+    <h3 id="frecvente">Atestările istorice, scorul DEX și estimarea Zipf</h3>
     <p>
       Numărul mic de lângă fiecare cuvânt din listă e <code>hist_occ</code> — de câte ori apare
       cuvântul, pe toată paradigma lui, în corpusul istoric. Nu apare deloc când e zero: un
@@ -967,8 +972,8 @@ wikisource_ro     14.297.033 tokens  →  0,1 ppm = <span class="gold">1,43 apar
       <code>make_shortlist.score</code> se bazează cel mai mult (mai sus) și are răspândire reală
       în lista implicită: 710 cuvinte stau la 3–4 atestări, 141 la 100 sau mai multe. Frecvența
       DEX și Zipf sunt două numere separate care sună la fel și nu măsoară nici pe departe același
-      lucru — nu mai apar lângă cuvânt, dar rămân filtrabile ca interval numeric în panoul de
-      filtre, pentru cine vrea să sape mai adânc.
+      lucru. Scorul DEX rămâne filtrabil ca interval numeric. Filtrul Zipf a fost eliminat:
+      pentru aproape toate cuvintele de aici, wordfreq nu oferă o estimare utilă.
     </p>
     <table class="data-table">
       <thead><tr><th></th><th>frecvența DEX</th><th>Zipf</th></tr></thead>
@@ -1036,16 +1041,13 @@ wikisource_ro     14.297.033 tokens  →  0,1 ppm = <span class="gold">1,43 apar
     <div class="callout">
       <p><strong>Pe <em>lista restrânsă</em>, Zipf e aproape mereu 0.</strong> Româna are la
       <code>wordfreq</code> doar lista „mică", a cărei podea de încredere e Zipf 3 — iar
-      <strong>17.537 din cele 17.687 de cuvinte</strong> stau sub ea. Filtrul Zipf nu separă
-      deci cuvintele uitate între ele; el prinde exact cele câteva zeci de intrări care
-      <em>nu</em> sunt rare și n-ar fi trebuit să ajungă pe listă — <em>ridicată</em> (4,62),
-      <em>jumătăți</em> (3,70), <em>brânzeturi</em> (3,47), forme flexionare sau compuse
-      strecurate printre lemele reale.</p>
+      <strong>18.232 din cele 18.270 de cuvinte</strong> din baza locală verificată la 05.10.2026 au scor zero. Scorul zero indică lipsa unei estimări utile, nu absența cuvântului din limbă.
+      Filtrul Zipf a fost eliminat; o estimare nenulă nu dovedește singură că un candidat este greșit.</p>
       <p>Pentru „cât de uitat e cuvântul" numărătorile proprii ale proiectului —
       <code>hist_occ</code> pe Wikisource și <code>modern_occ</code> pe CulturaX, rulate pe
       paradigme întregi — spun mult mai mult decât oricare dintre cele două scoruri de mai sus.
-      Zipf a rămas ca sită rapidă și independentă (vezi <code>docs/wordfreq-recipe.md</code>),
-      nu ca verdict.</p>
+      Scripturile wordfreq și wRodfreq sunt verificări separate. Niciunul nu alimentează scorul sau verdictul live.
+      Evaluarea independentă a clasamentului rămâne de făcut.</p>
     </div>
 
     <h3>Patru etichete, separate de scor</h3>

@@ -6,9 +6,10 @@ These literals used to be duplicated — and to disagree — across
 ``analyze_forgotten_words.py``, ``create_curated_list.py``, and
 ``validate_forgotten_words.py``. See docs/BACKLOG.md (#5).
 
-DEX ``frequency`` is an editorial-coverage score in [0.0, 1.0]; lower means
-more likely forgotten. ``0.0`` means *no data*, NOT "rarest" — always filter
-with ``frequency > MIN_FREQUENCY``.
+The current pipeline treats DEX ``frequency`` in [0.0, 1.0] as a
+lexicographic-prominence signal, not measured usage frequency. This is an
+empirical interpretation. The legacy rarity-bin names remain for compatibility.
+``0.0`` means *no data*, NOT "rarest" — filter with ``frequency > MIN_FREQUENCY``.
 """
 
 # --- Shared across all stages -------------------------------------------------

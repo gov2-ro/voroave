@@ -1,6 +1,12 @@
 # Conceptual roadmap
 
-This document sits above the implementation backlog in `CLAUDE.md`. The
+> Historical critique; status reconciled 2026-10-05. The current implementation already uses
+> diachronic panels, paradigm rollup, and sense-level metadata. References below to Wikipedia,
+> future taxonomy, and guessed earlier weights describe older versions. Independent evaluation
+> and calibrated uncertainty remain open. Use [F09](fixes/F09-evaluation.md) for the next scoped task.
+> A normalized rate has consistent units across corpus sizes; sparse sampling and register differences limit inference.
+
+This document sits above the implementation backlog in `docs/BACKLOG.md`. The
 backlog there is about *code*: bugs, duplications, missing CLI flags. This
 document is about *what the project is measuring* and whether the design can
 honestly answer the question it claims to.
@@ -157,7 +163,7 @@ Suggested ordering: §6 → §2 → §4 → §3 → §5 → §1.
 
 ## What this does *not* contradict
 
-The implementation backlog in `CLAUDE.md` ("Enhancement backlog") still
+The implementation backlog in `docs/BACKLOG.md` ("Enhancement backlog") still
 applies. Items there — fix the candidate-set mismatch, add `requirements.txt`,
 consolidate MySQL→SQLite paths, add tests/CI — are prerequisites or
 co-requisites, not alternatives. This document is what those items are

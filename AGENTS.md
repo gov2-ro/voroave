@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-Guidance for Claude (and humans) working in this repository.
+Guidance for Codex (and humans) working in this repository.
 
 ## Current documentation and audit handoff
 

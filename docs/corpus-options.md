@@ -1,5 +1,11 @@
 # Corpus options beyond Wikipedia
 
+> Historical options catalog. Reconciled 2026-10-05: Wikipedia/OSCAR is archived.
+> Wikisource, LUMRO, and CulturaX are already loaded into the production panels.
+> Wordfreq proved too coarse for this vocabulary and feeds no production score.
+> Use [corpus expansion](corpus-expansion-plan.md) for measured decisions and
+> [F09](fixes/F09-evaluation.md) for the next research task. Suggestions below are historical, not an execution queue.
+
 Wikipedia RO was the right choice as a Phase 2 proof-of-concept: a known
 HuggingFace dataset, streamable, no auth, well-formed. It's the wrong choice
 as the *only* corpus the project ever runs against. This document catalogues
@@ -8,14 +14,9 @@ what's available, why it matters, and what to swap in.
 Companion to `conceptual-roadmap.md` §3 (diachronic) and §5 (statistical
 power).
 
-> **Pragmatic shortcut.** For the project's stated goal — produce a list of
-> dictionary words not in common modern use — most of this catalog is
-> overkill. `wordfreq` already aggregates 8 corpora (Wikipedia, OpenSubtitles,
-> SUBTLEX, NewsCrawl, GlobalVoices, Google Books, OSCAR, Twitter) per
-> language and ships frequency tables for Romanian. Read
-> `docs/wordfreq-recipe.md` first; come back here only if its Zipf-3 floor
-> proves too coarse, or if you want to chase the more ambitious methodology
-> in `docs/methodology-v2.md`.
+> The proposed wordfreq shortcut was measured and rejected for the production ranking.
+> Its historical rationale is retained in [the archived recipe](archive-obsolete/wordfreq-recipe.md).
+> More corpora must improve evidence quality, not just add tokens.
 
 ## Why diversify
 

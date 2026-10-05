@@ -1,12 +1,12 @@
-# Phase 2 corpus pipeline (legacy)
+# Corpus processing; dependency pinning/separation is specified in docs/fixes/F07-test-harness.md
 datasets
 
-# Pragmatic alternative — see docs/wordfreq-recipe.md
+# Pragmatic alternative — see docs/archive-obsolete/wordfreq-recipe.md
 wordfreq
 simplemma
 
 # The sibling project this alternative motivated — see validate_with_wrodfreq.py
-# and docs/wordfreq-recipe.md §4. Not on PyPI; editable install of the sibling
+# and docs/archive-obsolete/wordfreq-recipe.md §4. Not on PyPI; editable install of the sibling
 # checkout so it tracks wRodfreq's data as the corpus panel grows.
 -e ../gov2/wrodfreq
 
@@ -15,7 +15,7 @@ simplemma
 ddgs
 google-api-python-client
 
-# Research UI
+# Archived Flask research UI (not required by the current PHP application)
 flask
 
 # Definition scraping — see scrape_definitions.py

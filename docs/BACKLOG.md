@@ -2,9 +2,74 @@
 
 Open bugs, debt, and enhancements. Add new entries with `- [ ]` and enough context to act on later.
 
+The [audit handoff](fixes/README.md) is the current execution queue. Its briefs define acceptance.
+Checkboxes describe status; dated investigations below preserve evidence from earlier builds.
+An old note is not a current measurement. Do not duplicate the same task in several sections.
+
 ---
 
 ## Bugs / Known Issues
+
+### Project audit — 2026-10-05
+
+- [ ] **P1: Live synonym searches return HTTP 500.** [Implementation brief](fixes/F01-synonym-deployment.md). The landing page loads, but
+  `/sinonime?q=frumos`, `?q=repede`, `?q=văz`, `/sinonime.php?q=frumos`, and
+  `/api/syn.php?q=frumos` fail. Local synonym tests pass against the checked-out
+  databases. Inspect server logs and verify `public/data/syn.db`, its schema,
+  permissions, and deployed PHP capabilities. The root cause is not yet established.
+  Add a production smoke check that searches a word; testing the landing page misses this.
+
+- [ ] **P1: Sync drops newer edits made during an earlier push.** [Implementation brief](fixes/F02-sync.md). Reproduced with
+  the real `store.js` in a VM and a delayed response. Edit `zapciu`, start `syncNow()`,
+  edit it again, then resolve the first request. The pending queue becomes empty,
+  although the newer note was never sent. `store.js:425` deletes snapshot keys without
+  comparing their current revision. Keep changed entries queued and schedule another push.
+  Also acknowledge only accepted changes: `sync.php` truncates requests at 5,000,
+  while the client clears its entire snapshot and ignores `rejected`.
+
+- [ ] **P1: The sense quiz exposes answers in structured definitions.** [Implementation brief](fixes/F03-quiz-spoilers.md). Confirmed
+  on the live desktop and mobile pages before answering. `ghici.php:434` masks
+  `.definition-text`, but `detail.php` now renders `.fp-senses` and `.fp-extras`.
+  These blocks, citations, and synonym hints remain visible. Extend the spoiler
+  policy to the full answer content. Verify structured and flat definitions separately.
+
+- [ ] **P2: `/stats` collides with the hosting provider's traffic report.** [Implementation brief](fixes/F04-statistics-route.md). Live
+  `/stats` returns “voroave.ro Web Server Statistics”; `/stats.php` returns the app.
+  A real directory wins over the extensionless rewrite. F04 selects `/statistici` for the app;
+  verify navigation and canonical URLs. Review hosting-report access as a separate owner operation.
+
+- [ ] **P2: `/despre` has an invalid preference boot script.** [Implementation brief](fixes/F06-about-preferences.md). In
+  `public/despre.html:25`, a `// before 2026-08-14` comment consumes the rest of
+  the single-line script. Chromium reports a syntax error. Remove the comment
+  or use a block comment. Verify saved theme, skin, and text scale on direct arrival.
+
+- [ ] **P2: Shared word links lose structured senses.** [Implementation brief](fixes/F05-shared-definitions.md). Confirmed with
+  `/?word=zapciu`: first arrival shows a flat definition with pipe-separated citations.
+  Clicking the word loads three structured senses. `index.php:550` passes only
+  `w` and `ssr`; `api/word.php` loads senses and citations too. Share the data-loading
+  path so both renderers receive the same content.
+
+- [ ] **P2: Define a repeatable current-project test command.** [Implementation brief](fixes/F07-test-harness.md). Python tests under
+  `tests/` pass: 222 tests. Unscoped pytest also collects archived Flask tests:
+  261 passed, six failed. Twelve local API suites passed; `test_store_sync.js`
+  failed because its hardcoded words `abecedar` and `zăbavă` are absent from `ui.db`.
+  The quiz DOM suite skips successfully when `jsdom` is missing. Declare JS test
+  dependencies, use durable fixtures, and make required-suite skips visible.
+
+- [ ] **P2: Build `ui.db` through a validated temporary artifact.** [Implementation brief](fixes/F08-atomic-build.md).
+  `tools/build_ui_db.py:1003` unlinks the previous output before building its replacement.
+  A later failure leaves a partial build and removes the last good artifact.
+  Validate required inputs, schema, integrity, and stable IDs before replacing the output.
+
+- [ ] **Ranking evaluation protocol** — [F09](fixes/F09-evaluation.md). Planning/sample only; no production scoring change.
+
+- [ ] **Recovery decision and backup verification** — [F10](fixes/F10-recovery.md). No account merge or production restore.
+
+- [x] **Reconcile current documentation and prepare delegation briefs** — completed 2026-10-05.
+  Current README/guide, dated historical notes, corrected public methodology, and F01–F10 handoff.
+  Application fixes and operational verification remain open.
+
+### Earlier findings
 
 - [ ] **`.fp-dicts` (the "în N dicționare" row) can sit below `.fp-body`'s scrollable
   fold, out of reach without scrolling first.** Found 2026-08-18 while reproducing the
@@ -34,7 +99,7 @@ Open bugs, debt, and enhancements. Add new entries with `- [ ]` and enough conte
   `zapciu`'s 1,322 from `celșag`'s 0), while any historical text moves the ranking
   directly. Prefer **newspapers over novels**: a novel is one writer's vocabulary, which
   is the same reason LUMRO's `document_count` is authors and not novels. See
-  `docs/wordfreq-recipe.md` §5–6 for the corpus shortlist (DigiBuc, BCU Cluj, Gutenberg RO)
+  `docs/archive-obsolete/wordfreq-recipe.md` §5–6 for the corpus shortlist (DigiBuc, BCU Cluj, Gutenberg RO)
   and §3–4 for why the additions should feed **corroboration counts, not a wordfreq-style
   trimmed mean**. Wikisource gives one occurrence =
   0.07 ppm, so the whole historical side rests on very few hits: 9,996 shortlist words
@@ -1108,7 +1173,10 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
   erau exact pe pragul de zgomot și scalarea proporțională taie în ambele sensuri. E
   comportamentul corect, nu un defect nou.
 - [x] explain how to use the site, how it works, how tagging / lists work.
-- [ ] **`tests/test_store_sync.js` pică la „sync watermark stored"** (observat 260810, nu
+- [x] **Investigation consolidated into F07; fixture repair remains open there.**
+  Reproduced 2026-10-05: both hardcoded words are absent from the audited UI database.
+  This explains a zero watermark and the later JSON parse failure. It is separate from F02's queue race.
+  **Historical report: `tests/test_store_sync.js` pică la „sync watermark stored"** (observat 260810, nu
   introdus atunci — reprodus și cu `store.js` din HEAD, deci e anterior). Verificarea e
   `!!JSON.parse(ls['otios.sync']).since`, deci un `since` întors ca `0` sau lipsă o pică, iar
   pasul următor moare pe `JSON.parse(undefined)`. De văzut dacă e starea `app.db` de dev sau
@@ -1195,11 +1263,12 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
 - [ ] word definitions, sometimes we're showing the secondary definition, see `zăticni`
 - [ ] ux: wordlist should be the next tabindex after search box (when showing results)
 - [ ] are we ignoring DCRs? we should be
+- [ ] check [lexicro.com](https://api.lexicro.com/docs)
+- [ ] noticed DEXonline definitions have a json/xml feed, `https://dexonline.ro/definitie/{cuvânt}/{json|xml}`. Found out about it on [dexonline/issues/562](https://github.com/dexonline/dexonline/issues/562). See also [balajmarius/dexonline-mcp-server](https://github.com/balajmarius/dexonline-mcp-server)
 
 ## Post launch
 
 - [ ] extra: DCR explorer – see how words appeared and drifted. anything from DCR made it to any other dict?
-- [ ] check [lexicro.com](https://api.lexicro.com/docs)
 - [ ] REBUS pentru masochiști
 - [ ] traffic analytics
 - [ ] SEO webmasters registrations
@@ -1258,9 +1327,10 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
 
 ## Server-side accounts — follow-ups (2026-08-02)
 
-- [ ] **Account claiming via Google OAuth** — the device token is the account today, so clearing cookies loses it and one person on two devices is two users. Schema is ready: `users.auth_provider` / `auth_subject` / `email` are nullable and `devices.user_id` is re-pointable, so this is ~120 lines of vanilla PHP plus a device-merge query, no migration.
+- [ ] **Account recovery — decision tracked in F10; OAuth is an option, not a selected implementation.**
+  Historical proposal: **Account claiming via Google OAuth** — the device token is the account today, so clearing cookies loses it and one person on two devices is two users. Schema is ready: `users.auth_provider` / `auth_subject` / `email` are nullable and `devices.user_id` is re-pointable, so this is ~120 lines of vanilla PHP plus a device-merge query, no migration.
 
-- [ ] **Transferable link code — assessment (2026-08-12).** Raised as "can't we use a browser
+- **Historical transferable link code assessment (2026-08-12).** Raised as "can't we use a browser
   signature so one browser doesn't make duplicate lists, and later let someone copy a token to
   another device". Two separate things; the first is a non-problem and the second is the OAuth
   item above without the OAuth.
@@ -1321,7 +1391,7 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
   Still open: `liste.php` remains `noindex` — lifting it is now a product decision, not a blocker.
 - [x] **Backups for `private/app.db`** — Done 2026-08-07. `php api/_backup.php` takes a `VACUUM INTO` snapshot into `<private>/backups/`, integrity-checks it, and prunes to the newest `--keep N` (default 14). CLI-only (`PHP_SAPI !== 'cli'` → 404 before any include), and it lives in `public/api/` because only the contents of `public/` reach the server. Cron line in CLAUDE.md.
 
-  - [ ] **Still open: get a copy off the machine.** A snapshot beside the original survives a bad migration or a mistaken delete, not a lost disk. Either confirm the host's own backup covers `~/voroave-private/`, or add an rsync/rclone step after the cron line.
+  - **Open verification consolidated into [F10](fixes/F10-recovery.md): get a copy off the machine.** A snapshot beside the original survives a bad migration or a mistaken delete, not a lost disk. Either confirm the host's own backup covers `~/voroave-private/`, or add an rsync/rclone step after the cron line.
 - [ ] **Verify WAL on the production host** — `app_db()` falls back to `journal_mode=TRUNCATE` when WAL is unavailable, which some NFS-backed shared hosts require. Check which mode is actually active after deploy: `PRAGMA journal_mode`.
 - [ ] **`feed_decisions` is written by nobody yet** — the table exists for the swipe game's keep/skip record, but `app.js` `feedKeep()`/`feedSkip()` still only set a bookmark. Wire it up to get a second signal (explicit rejection) distinct from "never seen".
 
@@ -1692,7 +1762,7 @@ because they are content/data decisions, not styling.
 
 ## Publishing a paper (2026-08-11)
 
-- [ ] **Decide whether to write one, and settle the evaluation question either way.**
+- **Evaluation execution is tracked in [F09](fixes/F09-evaluation.md). Paper submission remains a separate later decision.**
   Full assessment in **`docs/publication-assessment.md`** — what is publishable (the
   paradigm rollup as a method; the four measured negative results — ppm across a 1,187×
   size gap, CoRoLa's 1945+ span, subtitle folk-music contamination, LUMRO authors-vs-novels;
@@ -1890,9 +1960,9 @@ because they are content/data decisions, not styling.
   be; it feeds nothing.
 
   Left open: `en_zipf` is now an unused column (its only consumer was `hide_loanwords`),
-  and `docs/wordfreq-recipe.md` still describes the tab as live.
+  and `docs/archive-obsolete/wordfreq-recipe.md` still describes the tab as live.
 
-- [ ] **The `zipf` explore filter is dead on the main list.** 17,533 of 17,577 words score
+- [x] **The `zipf` explore filter was removed on 2026-08-11.** Historical diagnosis follows; see the completed entry below. 17,533 of 17,577 words score
   exactly `0.00` — wordfreq has no Romanian data for them — so `zipf_min` above zero leaves
   **44** words out of 18,270. It is the last place wordfreq still touches the UI, and the
   same resolution problem that got the „rare" tab deleted: the library's Romanian
@@ -1903,7 +1973,7 @@ because they are content/data decisions, not styling.
   and stop offering it as a filter. Any of the three beats a slider that looks continuous
   and has two states.
 
-- [ ] **`en_zipf` is now an unused column.** Its only consumer was `hide_loanwords`, removed
+- [x] **Retaining the unused `en_zipf` column is a closed decision.** The detail-display question remains open separately. Its only consumer was `hide_loanwords`, removed
   with the rare tab. `en_zipf >= 4.0` matches **0** of the 18,270 words on the list (724
   have any value at all), so it cannot come back as a filter here without first finding a
   population it separates.
@@ -1914,14 +1984,14 @@ because they are content/data decisions, not styling.
   a control that reveals nothing is worse than no control. The `zipf_frequency` column
   stays; it is simply not offered as a filter.
 
-- [ ] **Closed as won't-fix: inflected forms as headwords.** Measured 2026-08-11 against
+- [x] **Closed as won't-fix: inflected forms as headwords.** Measured 2026-08-11 against
   the rebuilt shortlist: **80 words** whose only DEX `modelType` is `T`/`IL`, **none of
   them in the `relevant` seam**, and most are legitimate nominalised infinitives
   (`zimbire`, `trândăvire`, `dormire`, `spășire`) rather than junk. The real offenders
   (`țipând`, `citarea`, `patinoare`) were in the deleted `rare_in_use` tier and went with
   it. Not worth a pipeline change.
 
-- [ ] **Closed as won't-fix: dropping the `en_zipf` column.** It is inert — its only
+- [x] **Closed as won't-fix: dropping the `en_zipf` column.** It is inert — its only
   consumer was `hide_loanwords` — but a column costs nothing and a schema migration for
   zero benefit costs more. The rule that matters is written down instead: `en_zipf >= 4.0`
   matches 0 of the 18,270 words here, so it cannot come back as a filter without first
@@ -2025,3 +2095,7 @@ because they are content/data decisions, not styling.
   against that chrome (see the comment at `app.css:39`). This is a swap, one slot.
 
 - [ ] **Remote app.db has three `pax1` users** (ids 1, 360, 373 — one person, three device tokens, 67/126/390 marks). `export_editorial.py --user N` must pick one; marks split across users also inflate `/colectii` distinct-person counts. Worth consolidating into one user (careful: that changes n_up counts site-wide) or at least deciding which id is canonical.
+
+
+Historical API lead: `dexonline.ro/definitie/<cuvant>?format=json`. Verify its current contract before adopting it;
+the existing JSON/XML research item above tracks this work. No duplicate task is opened here.
