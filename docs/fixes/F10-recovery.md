@@ -1,6 +1,6 @@
 # F10 — Plan account recovery and verify backup operations
 
-Status: planning / operational verification. Priority: P2.
+Status: proposal and runbook ready for owner decision; operational checks need access. Deliverables: [identity proposal](../recovery/identity-proposal.md), [backup runbook](../recovery/backup-runbook.md). Implementation of recovery stays blocked on the owner's product decision. Priority: P2.
 
 ## Problem and scope
 

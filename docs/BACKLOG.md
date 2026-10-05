@@ -64,7 +64,7 @@ An old note is not a current measurement. Do not duplicate the same task in seve
 
 - [ ] **Ranking evaluation protocol** — [F09](fixes/F09-evaluation.md). Planning/sample only; no production scoring change. *Protocol ready for owner review; study not run (2026-10-05): `docs/eval/protocol.md`, `tools/eval_sample.py`, `docs/eval/sample-*`. Open: owner approval, annotators, tool, privacy decisions (protocol section 14).*
 
-- [ ] **Recovery decision and backup verification** — [F10](fixes/F10-recovery.md). No account merge or production restore.
+- [ ] **Recovery decision and backup verification** — [F10](fixes/F10-recovery.md). No account merge or production restore. *Planning done 2026-10-05: [identity proposal](recovery/identity-proposal.md) (recommends the link/recovery code, Option A) and [backup runbook](recovery/backup-runbook.md). Open: owner product decision (blocks implementation); operational checks (cron, retention, off-machine copy, restore drill on real access) need ops access and are UNVERIFIED. Local synthetic restore rehearsal passed.*
 
 - [x] **Reconcile current documentation and prepare delegation briefs** — completed 2026-10-05.
   Current README/guide, dated historical notes, corrected public methodology, and F01–F10 handoff.
@@ -1328,10 +1328,10 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
 
 ## Server-side accounts — follow-ups (2026-08-02)
 
-- [ ] **Account recovery — decision tracked in F10; OAuth is an option, not a selected implementation.**
+- [ ] **Account recovery — decision tracked in F10; OAuth is an option, not a selected implementation.** *(Consolidated into F10 on 2026-10-05; the proposal compares it with a link/recovery code.)*
   Historical proposal: **Account claiming via Google OAuth** — the device token is the account today, so clearing cookies loses it and one person on two devices is two users. Schema is ready: `users.auth_provider` / `auth_subject` / `email` are nullable and `devices.user_id` is re-pointable, so this is ~120 lines of vanilla PHP plus a device-merge query, no migration.
 
-- **Historical transferable link code assessment (2026-08-12).** Raised as "can't we use a browser
+- **Historical transferable link code assessment (2026-08-12).** *(Consolidated into F10; see [identity proposal](recovery/identity-proposal.md).)* Raised as "can't we use a browser
   signature so one browser doesn't make duplicate lists, and later let someone copy a token to
   another device". Two separate things; the first is a non-problem and the second is the OAuth
   item above without the OAuth.

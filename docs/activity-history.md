@@ -2,6 +2,18 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F10 Recovery proposal and backup runbook
+
+Status: proposal and runbook ready for owner decision; operational checks need access. Planning only. No account merged, no Google account connected, no credential rotated, no scheduled job changed, no production restore.
+
+Delivered: `docs/recovery/identity-proposal.md` (current identity lifecycle with file:line citations, link/recovery code versus Google OAuth with abuse cases, a future merge specification, recommendation of Option A, implementation blocked on the owner) and `docs/recovery/backup-runbook.md` (coverage, snapshots, retention, off-machine options, 26-hour freshness check proposal, RPO/RTO, disposable restore drill, verified/missing/assumed table).
+
+Local verification (synthetic only): staged copy of `public/` with its own `config.local.php`, temp private dir, 50 users / 1,000 annotations. `php api/_backup.php --dir <tmp>` gave a 240 KB snapshot, mode 0600, integrity ok. Restored copy: `integrity_check` ok, `user_version` 4, row counts equal. The snapshot is in `delete` journal mode; the app switches it to WAL on open.
+Live verification: none. Cron, retention, off-machine copy and production WAL mode are UNVERIFIED (no ops access).
+Isolation: `stat -f "%m %z" private/app.db` was `1791208393 1531904` before and after.
+
+Remaining: owner decisions listed in section 5 of the identity proposal; owner actions in section 10 of the runbook.
+
 ## 2026-10-05 — F09 Ranking evaluation protocol and sample
 
 Status: protocol ready for owner review; study not run. No annotator contacted. No label collected. No weight changed.
