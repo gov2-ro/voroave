@@ -1,6 +1,6 @@
 # F09 — Design a small ranking evaluation
 
-Status: research proposal. No scoring change is authorized by this brief.
+Status: protocol ready for owner review; study not run. Deliverables: [protocol](../eval/protocol.md), `tools/eval_sample.py`, `docs/eval/sample-provenance.json`, `docs/eval/sample-words.tsv`. No scoring change is authorized by this brief.
 
 ## Question and evidence
 

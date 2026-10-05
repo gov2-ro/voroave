@@ -62,7 +62,7 @@ An old note is not a current measurement. Do not duplicate the same task in seve
   A later failure leaves a partial build and removes the last good artifact.
   Validate required inputs, schema, integrity, and stable IDs before replacing the output.
 
-- [ ] **Ranking evaluation protocol** — [F09](fixes/F09-evaluation.md). Planning/sample only; no production scoring change.
+- [ ] **Ranking evaluation protocol** — [F09](fixes/F09-evaluation.md). Planning/sample only; no production scoring change. *Protocol ready for owner review; study not run (2026-10-05): `docs/eval/protocol.md`, `tools/eval_sample.py`, `docs/eval/sample-*`. Open: owner approval, annotators, tool, privacy decisions (protocol section 14).*
 
 - [ ] **Recovery decision and backup verification** — [F10](fixes/F10-recovery.md). No account merge or production restore.
 

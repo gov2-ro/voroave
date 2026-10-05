@@ -1,0 +1,74 @@
+{
+  "dev_share_percent": 40,
+  "floor_per_cell": 3,
+  "inflected_db": {
+    "sha256": "ffcaa16b0ffad3e724ae8ce3dbdf414a4ac092a20dc5720a9ada336a73261394",
+    "size_bytes": 212586496
+  },
+  "inflection_families_used": true,
+  "n_requested": 1200,
+  "score_band_edges": [
+    60,
+    80,
+    92,
+    105
+  ],
+  "script": "tools/eval_sample.py",
+  "script_version": "1.0.0",
+  "seed": "f09-voroave-eval-v1",
+  "sha256_annotator_export": "27c2e7bc3f98ea383f1f681f361b0d36459803d0db2119b32e20ac9e1087d829",
+  "sha256_sample_key": "c34c2dc2e03918dab77dfd915b34586dbebf6339c3f4e7a7f0fd5369135deb40",
+  "strata": {
+    "by_attr": {
+      "derived": 118,
+      "plain": 612,
+      "regional": 191,
+      "variant": 279
+    },
+    "by_def_kind": {
+      "flat": 623,
+      "structured": 577
+    },
+    "by_score_band": {
+      "60-79": 434,
+      "80-91": 296,
+      "92-104": 225,
+      "ge105": 58,
+      "lt60": 187
+    },
+    "by_seam": {
+      "curiosity": 917,
+      "relevant": 283
+    },
+    "by_seam_verdict": {
+      "curiosity|absent": 345,
+      "curiosity|declining": 271,
+      "curiosity|extinct": 35,
+      "curiosity|historical_only": 266,
+      "relevant|declining": 48,
+      "relevant|extinct": 18,
+      "relevant|historical_only": 217
+    },
+    "by_split": {
+      "dev": 481,
+      "test": 719
+    },
+    "by_verdict": {
+      "absent": 345,
+      "declining": 319,
+      "extinct": 53,
+      "historical_only": 483
+    },
+    "n": 1200,
+    "n_cells": 58,
+    "n_groups": 1174
+  },
+  "ui_db": {
+    "build_date_note": "ui.db stores no build date; mtime is a proxy",
+    "mtime_utc": "2026-08-18T12:37:43Z",
+    "path": "public/data/ui.db",
+    "sha256": "1c7c9eab356c581974f38d8cfe251d76aae6b72b8a726d16344e2493044a186a",
+    "size_bytes": 22294528,
+    "words_rows": 18270
+  }
+}

@@ -2,6 +2,27 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F09 Ranking evaluation protocol and sample
+
+Status: protocol ready for owner review; study not run. No annotator contacted. No label collected. No weight changed.
+`private/app.db` not opened (size and mtime check: `1791208393 1531904` before and after).
+
+Delivered: `docs/eval/protocol.md` (three separate questions Q1 recognition, Q2 current use, Q3 rediscovery value, plus Q2b
+register versus decline; Romanian annotator text with English gloss; two-stage display; baselines B1 to B6 with the
+component list of `make_shortlist.score()`; leakage controls; weighted AUC, Spearman, precision at k, NDCG with bootstrap over lemma
+groups; agreement; error categories E1 to E11; decision criteria; cost note on dated newspapers). `tools/eval_sample.py`
+(deterministic, opens `ui.db` read-only with `mode=ro&immutable=1`). `tests/test_eval_sample.py` (5 tests, synthetic db).
+Committed `docs/eval/sample-words.tsv` (70 KB, words and strata only) and `docs/eval/sample-provenance.json`.
+
+Measurements: 1,200 items, 58 cells, 1,174 groups; 481 development and 719 test. Kish n_eff 779 (all) and 458 (test), so a
+weighted proportion on test has about +/-4.6 points half-width. `zipf_frequency` is above 0 for 38 of 18,270 words
+(8 of 1,200 sampled), so wordfreq is reported on a tiny subset. Two runs of the sampler gave identical files (`diff -r`).
+
+Skipped: no real labelling, no wRodfreq run (needs sibling checkout and an owner decision), no off-shortlist control set.
+Limitations: groups cannot see unrelated-paradigm variants; `ui.db` stores no build date (mtime used as proxy);
+all numbers in protocol section 8 are planning estimates to confirm by bootstrap on the pilot.
+Local verification only. Full runner: PASS (24/24 suites; pytest 262 passed).
+
 ## 2026-10-05 — F08 Atomic UI database build
 
 Reproduction (scratch dir, tmp output holding `GOOD`): `build()` with a shortlist missing the `word` column raised
