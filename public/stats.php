@@ -16,6 +16,8 @@ global $POS_OPTIONS;
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <?= otios_skin_boot() ?>
   <title>Statistici — Voroave</title>
+  <link rel="canonical" href="<?= e(otios_abs_url(NAV_ITEMS['stats']['path'])) ?>">
+  <meta property="og:url" content="<?= e(otios_abs_url(NAV_ITEMS['stats']['path'])) ?>">
   <meta property="og:title" content="Statistici — Voroave">
   <meta property="og:description" content="Statistical breakdown of forgotten Romanian words: etymology, parts of speech, registers, domains, and more.">
   <meta property="og:type" content="website">

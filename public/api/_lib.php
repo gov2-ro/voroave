@@ -261,7 +261,7 @@ const NAV_ITEMS = [
     // entries competing for a phone bar is the measurement that split this nav between
     // header and footer in the first place, and a reader who wants the method has nearly
     // always read the overview first.
-    'stats'  => ['path' => '/stats',        'icon' => '📊', 'label' => 'statistici'],
+    'stats'  => ['path' => '/statistici',   'icon' => '📊', 'label' => 'statistici'],
     'metod'  => ['path' => '/metodologie', 'icon' => '🧐', 'label' => 'metodologie'],
     'liste'  => ['path' => '/liste',        'icon' => '📋', 'label' => 'liste'],
 ];

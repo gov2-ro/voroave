@@ -17,6 +17,16 @@
     # would otherwise never see it anyway, since /joc.php no longer exists.
     RewriteRule ^joc(\.php)?/?$ ghici [R=301,L]
 
+    # ── /statistici → stats.php (F04) ──
+    #
+    # The application statistics page lives at /statistici because the host reserves
+    # /stats for its own traffic report. A real `stats/` directory there bypasses the
+    # extensionless rules below, so the app cannot use that slug. This is an internal
+    # rewrite, not a redirect: the query string is kept by default (no QSD flag), and no
+    # POST is ever redirected. Placed before the generic rules so it always wins.
+    # /stats.php stays reachable for old links. No RewriteBase: it works at any depth.
+    RewriteRule ^statistici/?$ stats.php [L]
+
     # ── Extensionless URLs: /despre → /despre.php, /metodologie → /metodologie.html ──
     #
     # Fires only when the requested path is not already a real file or directory *and* the

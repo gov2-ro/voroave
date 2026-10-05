@@ -2,6 +2,26 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F04 statistics route /statistici
+
+Reproduction (local, scratch copy with the HEAD router and `.htaccess`): `/statistici` returned 404;
+`/stats.php?q=1` returned the app with the query; a real `stats/` directory served itself at `/stats`
+and `/stats/` and shadowed any extensionless rewrite. The live `/stats` provider report is a hosting
+fact and was not reproduced.
+
+Fix: explicit internal rewrite `^statistici/?$ -> stats.php [L]` in `public/.htaccess` before the generic
+rules. `tools/dev-router.php` mirrors it, with a path prefix. `NAV_ITEMS['stats']` path, the `despre.html`
+link, and the canonical and `og:url` of `stats.php` use `/statistici`. `/stats.php` still works.
+AGENTS.md and CLAUDE.md name the route in the Clean URLs section.
+
+Validation (local): new suites `tests/test_statistics_route.py` (10 tests, including a real Homebrew `httpd`
+with mod_rewrite at root, `/sub` and a `/prov` dir that holds a real `stats/`) and `tests/test_statistics_route.js`
+(19 checks on the staged server). Full strict runner: 23/23 suites pass.
+`private/app.db` unchanged (1791208393 1531904).
+
+Skipped: live verification. Limitations: the Apache test uses static probe files, not PHP.
+The router prefix support is for a subfolder inside the docroot only. Owner steps are in the brief.
+
 ## 2026-10-05 — F05 shared definitions on direct arrival
 
 Reproduction (local, staged copy of public/ with its own private dir): `/?word=zapciu` rendered the flat

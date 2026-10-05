@@ -1877,6 +1877,13 @@ and one row lifted to the top. Pinned by `tests/test_share_view.js`.
 
 ## Clean URLs — `public/.htaccess`
 
+**The statistics page is `/statistici`, not `/stats`** (F04). The host reserves `/stats` for its
+own traffic report, and a real directory beats the extensionless rewrite. `.htaccess` therefore
+has one explicit internal rewrite, `^statistici/?$ → stats.php`, before the generic rules. It is
+not a redirect and it keeps the query string. `/stats.php` still works. `tools/dev-router.php`
+mirrors the rule, including a path prefix. `NAV_ITEMS['stats']['path']` and the canonical URL on
+`stats.php` use `/statistici`. Pinned by `tests/test_statistics_route.{py,js}`.
+
 `/despre` serves `despre.html`, `/metodologie` serves `metodologie.html`. Both are plain
 `.html` now; the rewrite tries `$uri.php` first and then `$uri.html`, so neither needed a
 rule of its own. Two rewrites, each

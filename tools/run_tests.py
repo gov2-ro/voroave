@@ -80,6 +80,8 @@ SUITES = [
     Suite("js share meta", "js", "tests/test_share_meta.js", "built", ("ui_db",)),
     Suite("js share seo", "js", "tests/test_share_seo.js", "built", ("ui_db",)),
     Suite("js share view", "js", "tests/test_share_view.js", "built", ("ui_db",)),
+    Suite("python statistici route (F04)", "py", "tests/test_statistics_route.py", "none", (), 120),
+    Suite("js statistici route (F04)", "js", "tests/test_statistics_route.js", "built", ("ui_db",)),
     Suite("js sinonime", "js", "tests/test_sinonime.js", "built", ("ui_db", "syn_db")),
     Suite("js sinonime states (F01)", "js", "tests/test_sinonime_states.js", "built",
           ("ui_db", "syn_db", "sqlite3")),
