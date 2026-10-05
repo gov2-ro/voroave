@@ -370,12 +370,78 @@ def run(ui_db: Path, out_dir: Path, n: int, seed: str, inflected_db: Path | None
     return summary
 
 
+# ---------------------------------------------------------------- spot-check
+# Stage 0 of the protocol: a cheap, owner-only check. It shares h(), score_band(),
+# allocate() and open_ro() with the full study. It never touches draw() or the
+# full-study outputs and provenance.
+
+SPOT_SEED = "f09-spotcheck-v1"
+SPOT_N = 150
+SPOT_FLOOR = 5                   # per (seam, score band) cell
+SPOT_MARKS_COLUMNS = ["item_id", "word", "definition", "mark"]
+SPOT_KEY_COLUMNS = ["item_id", "word", "score", "rank", "n_total", "seam", "score_band",
+                    "modern_occ", "dex_frequency"]
+
+
+def draw_spotcheck(rows: list[dict], n: int, seed: str) -> list[dict]:
+    """Stratify by (seam, score band). Rank 1 is the highest score; ties break by word."""
+    ranked = sorted(rows, key=lambda r: (-(r.get("quality_score") or 0), r["word"]))
+    cells: dict[tuple, list[dict]] = defaultdict(list)
+    for i, r in enumerate(ranked, 1):
+        r["rank"] = i
+        r["n_total"] = len(ranked)
+        r["score"] = r.get("quality_score")
+        r["score_band"] = score_band(r.get("quality_score"))
+        cells[(r["seam"], r["score_band"])].append(r)
+    floor = min(SPOT_FLOOR, max(1, n // len(cells)))
+    quota = allocate({k: len(v) for k, v in cells.items()}, n, floor)
+    picked: list[dict] = []
+    for key in sorted(cells):
+        members = sorted(cells[key], key=lambda r: (h(seed, "spot", r["word"]), r["word"]))
+        picked.extend(members[:quota[key]])
+    for r in picked:
+        r["item_id"] = "S" + hashlib.sha256(f"{seed}\x1fid\x1f{r['word']}".encode()).hexdigest()[:8]
+    if len({r["item_id"] for r in picked}) != len(picked):
+        raise SystemExit("item_id collision; change the seed")
+    return picked
+
+
+def run_spotcheck(ui_db: Path, out_dir: Path, n: int, seed: str) -> dict:
+    conn = open_ro(ui_db)
+    try:
+        rows = load_rows(conn)
+        picked = draw_spotcheck(rows, n, seed)
+        senses = load_senses(conn, {r["word"] for r in picked})
+    finally:
+        conn.close()
+    picked.sort(key=lambda r: (h(seed, "order", r["word"]), r["word"]))   # blind order
+    for r in picked:
+        text = (r.get("definition") or "").strip() or senses.get(r["word"], "")
+        r["definition"] = " ".join(text.split())      # one line per row
+        r["mark"] = ""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    with open(out_dir / "spotcheck_marks.tsv", "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=SPOT_MARKS_COLUMNS, delimiter="\t",
+                           extrasaction="ignore", lineterminator="\n")
+        w.writeheader()
+        w.writerows(picked)
+    write_csv(out_dir / "spotcheck_key.csv", SPOT_KEY_COLUMNS,
+              sorted(picked, key=lambda r: r["rank"]))
+    by_band: dict[str, int] = defaultdict(int)
+    for r in picked:
+        by_band[r["score_band"]] += 1
+    return {"n": len(picked), "by_score_band": dict(sorted(by_band.items()))}
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--ui-db", type=Path, default=DEFAULT_UI_DB)
     ap.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
-    ap.add_argument("--n", type=int, default=DEFAULT_N)
-    ap.add_argument("--seed", default=DEFAULT_SEED)
+    ap.add_argument("--n", type=int, default=None)
+    ap.add_argument("--seed", default=None,
+                    help=f"default {DEFAULT_SEED}, or {SPOT_SEED} with --spotcheck")
+    ap.add_argument("--spotcheck", action="store_true",
+                    help="Stage 0: write a small blind sheet for the owner (default --n 150)")
     ap.add_argument("--inflected-db", type=Path, default=None,
                     help="data/processed/inflected_forms.db; adds shared-lexeme links to groups")
     ap.add_argument("--provenance-out", type=Path, default=None)
@@ -384,6 +450,12 @@ def main(argv=None) -> int:
     if not a.ui_db.exists():
         print(f"missing {a.ui_db}", file=sys.stderr)
         return 1
+    if a.spotcheck:
+        summary = run_spotcheck(a.ui_db, a.out_dir, a.n or SPOT_N, a.seed or SPOT_SEED)
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
+        return 0
+    a.n = a.n or DEFAULT_N
+    a.seed = a.seed or DEFAULT_SEED
     summary = run(a.ui_db, a.out_dir, a.n, a.seed, a.inflected_db, a.provenance_out, a.words_out)
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0

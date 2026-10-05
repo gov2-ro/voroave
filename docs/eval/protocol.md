@@ -8,6 +8,43 @@ metrics and decision rules before any judgment exists. The owner approves it, th
 After approval, every change goes in the amendment log (section 15) with a date and a reason.
 No annotator has been contacted. No judgment has been collected. No weight has changed.
 
+## Stage 0 — curator spot-check
+
+Purpose: a cheap check that the owner can do alone in one afternoon, before and apart from the full study.
+The site is a curated product, not a scientific publication. The owner wants a first, rough answer:
+do the good finds sit near the top of the ranking, or are they spread around?
+
+What the owner does:
+
+1. Run `python3 tools/eval_sample.py --spotcheck --n 150`. The seed is `f09-spotcheck-v1`.
+   The script draws about 150 words at random across the whole ranking. It stratifies by seam and score band,
+   so every band is present. It writes `data/eval/spotcheck_marks.tsv` and a hidden `data/eval/spotcheck_key.csv`.
+2. Open the marks file. It has four columns: `item_id`, `word`, `definition`, `mark`. It shows no score, seam, verdict or flag.
+   The row order is a hash shuffle. Do not open the key file.
+3. Fill `mark` for each word: `bun` (a good find), `meh`, or `slab` (a dud).
+   Add `?` if unsure (`bun?`). Write only `?`, or leave the cell empty, to skip a word.
+4. Run `python3 tools/eval_spotcheck.py`. It prints a one-page result.
+
+How to read the result:
+
+- Section 1 gives the share of `bun`, `meh` and `slab` by place in the ranking (thirds), by score band and by seam.
+  If the share of `bun` falls from top to bottom, the ranking helps. If it is flat, the score adds little.
+- Section 2 gives one number per ordering: the chance that a random `bun` ranks above a random `slab`.
+  50% is a coin flip. The orderings are the current score, modern count (low first) and DEX prominence (high first).
+  The interval is a rough bootstrap. If an interval includes 50%, or the difference includes zero, the check shows no clear result.
+- Sections 3 and 4 list `bun` words in the bottom third (buried finds) and `slab` words in the top third (high duds).
+  These lists are the most useful output. Read them as error examples.
+
+Limits:
+
+- With about 150 words, the check is a rough signal. It cannot settle a close call.
+- It does not replace the full study. It does not authorize any score change. A score change needs the full protocol.
+- The marks are one person's taste, so they answer "does this curator like these finds", not "do speakers recognise them".
+- The marks in `data/editorial.tsv` cannot answer this question. The curator saw the words in score order,
+  so those marks are biased towards the top of the ranking. The spot-check hides the order on purpose.
+- The pooled numbers in section 2 are not re-weighted by stratum. Read section 1 first.
+- The spot-check sample is separate from the full-study sample. It does not change the full-study seed, sample or provenance.
+
 ## 1. Purpose and limits
 
 Question: does the ranking identify rediscoverable vocabulary better than simple baselines?

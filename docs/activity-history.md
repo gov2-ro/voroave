@@ -2,6 +2,19 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F09 Stage 0 curator spot-check tooling
+
+Owner decision: the site is a curated product. Add a cheap owner-only check before the full F09 study.
+Added `--spotcheck` to `tools/eval_sample.py` (seed `f09-spotcheck-v1`, 150 words, strata seam x score band, floor 5 per cell).
+It writes a blind `spotcheck_marks.tsv` and a hidden `spotcheck_key.csv` to `data/eval/`.
+Added `tools/eval_spotcheck.py`: bun share by ranking third, score band and seam; AUC with bootstrap interval
+for current score, modern count (low first) and DEX prominence (high first); buried finds and high duds.
+Added a "Stage 0" section to `docs/eval/protocol.md`. The full-study sampler, sample and provenance are unchanged.
+Local validation: `tests/test_eval_spotcheck.py` (synthetic db and marks); a dry run on the real `ui.db`
+(opened `mode=ro&immutable=1`) into a temp directory with random synthetic marks. No real marks exist.
+`private/app.db` was not opened; mtime and size are unchanged (`1791208393 1531904`).
+Limits: about 150 words is a rough signal; pooled AUC is not re-weighted by stratum. Live verification: none.
+
 ## 2026-10-05 — Public alpha readiness backlog
 
 Added a "Public alpha readiness" section to `docs/BACKLOG.md`.
