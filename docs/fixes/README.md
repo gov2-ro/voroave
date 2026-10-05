@@ -1,6 +1,8 @@
 # Audit implementation handoff
 
-Status: specified, not implemented. Evidence was collected on 2026-10-05.
+Status (2026-10-05): F01–F08 are fixed locally and committed; none is deployed.
+F01, F02, F04 and F05 still need a live check after the owner deploys. F09 and F10 are planning deliverables for owner decision.
+Each brief's `Status:` line is authoritative. Evidence was collected on 2026-10-05.
 Reproduce each finding before changing code. Live state may change after this date.
 
 These briefs are the execution queue. `docs/BACKLOG.md` holds their status and the wider backlog.
