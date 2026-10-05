@@ -2,8 +2,8 @@
 
 Portable. It stages tiny copies of the real .htaccess and dev router with a probe
 stats.php, so it needs no ui.db and never loads the real application or any app.db.
-The Apache test runs only when httpd with mod_rewrite is installed; otherwise it skips
-(strict mode then reports that skip).
+The Apache test is opt-in (`pytest tests -m apache`), because it needs a local httpd
+with mod_rewrite. The required run deselects it; when selected without httpd, it skips.
 """
 import os
 import re
@@ -173,6 +173,7 @@ def find_apache():
     return exe, mod
 
 
+@pytest.mark.apache
 def test_apache_rewrite_root_and_subfolder():
     found = find_apache()
     if not found:

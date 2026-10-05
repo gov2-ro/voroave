@@ -44,6 +44,7 @@ Deliver the application patch and owner instructions for the reserved hosting ro
   real `httpd` with mod_rewrite at root, `/sub` and `/prov`) and `tests/test_statistics_route.js`.
 - Local only. The live `/stats` collision is a hosting fact and was not reproduced here.
   Apache was tested with Homebrew `httpd` and static probe files, not with PHP.
+  The Apache test is opt-in: `.venv/bin/python -m pytest tests -q -m apache`. The required run deselects it.
 
 ## Owner instructions (not done by this task)
 
