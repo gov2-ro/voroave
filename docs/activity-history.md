@@ -2,6 +2,14 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — Session close: resume list and version tags
+
+Created local annotated tags `v0.2.0` to `v0.6.0` for the F01–F10 work, the alpha backlog and the spot-check tools.
+The tags are not pushed. Added a "Resume here" section at the top of `docs/BACKLOG.md`.
+It lists the deploy and live checks, the pending spot-check marking, and the in-app marking-mode decision.
+It also lists the stale `#tag-input` documentation, the dev `app.db` prune decision, and two follow-ups from F02 and F03.
+No application code changed in this entry.
+
 ## 2026-10-05 — F09 Stage 0: mark in the web UI
 
 Owner decision: mark the spot-check in the existing UI as custom tags, not in the TSV.

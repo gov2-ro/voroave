@@ -70,6 +70,24 @@ An old note is not a current measurement. Do not duplicate the same task in seve
   Current README/guide, dated historical notes, corrected public methodology, and F01–F10 handoff.
   Application fixes and operational verification remain open.
 
+### Resume here — open items after the 2026-10-05 session
+
+Local tags `v0.2.0`–`v0.6.0` mark this session's work. They are not pushed (`git push --tags`).
+
+- [ ] **Deploy F01–F06 and verify live.** Nothing from 2026-10-05 is deployed. Each brief's `Status:` line names its live check.
+  Deploy `public/api/sync.php` and `public/assets/store.js` together, server first (F02, `docs/sync-protocol.md`).
+- [ ] **Finish the F09 Stage 0 spot-check.** Tooling is ready (`docs/eval/protocol.md`, Stage 0). The owner marks 150 words locally.
+  Link: `data/eval/spotcheck_link.txt`. Marker: paste `tools/spotcheck_marker.js` into the console. Report: `tools/eval_spotcheck.py --from-appdb`.
+  Do not rerun `eval_sample.py --spotcheck`; it rewrites the marks sheet.
+- [ ] **Decide on an in-app spot-check marking mode** (for example `?spotcheck=1`) before outside helpers mark.
+  The console paste works for the owner only. The detail panel has no free-text tag box since the August quick-tags redesign.
+- [ ] **Correct the stale `#tag-input` notes in `AGENTS.md`/`CLAUDE.md`** (the "Custom tags typed into `#tag-input`" line).
+  The detail panel no longer renders a tag input. Custom tags are still stored and synced.
+- [ ] **Decide whether to prune the test device from the dev `private/app.db`.** A test run on 2026-10-05 added one anonymous
+  device, quiz answers and marks (see activity history, "Test isolation guard"). Back up the file before any delete.
+- [ ] **F03 follow-up: the unlisted flash mode (`/ghici?mode=flash`) shows the definition before the reveal.** Out of F03's scope.
+- [ ] **F02 follow-up: no automatic retry with backoff after a transient sync failure.** The next edit, page load or tab hide retries.
+
 ### Public alpha readiness — 2026-10-05
 
 The owner's sequence: build a full-featured MVP first. Use it to ask dexonline for permission.
