@@ -12,7 +12,7 @@ An old note is not a current measurement. Do not duplicate the same task in seve
 
 ### Project audit — 2026-10-05
 
-- [ ] **P1: Live synonym searches return HTTP 500.** [Implementation brief](fixes/F01-synonym-deployment.md). The landing page loads, but
+- [ ] **P1: Live synonym searches return HTTP 500.** *Local fix done 2026-10-05 (503 unavailable state, `api/_syn_check.php`, tests); live outage open until the owner deploys `syn.db` and verifies.* [Implementation brief](fixes/F01-synonym-deployment.md). The landing page loads, but
   `/sinonime?q=frumos`, `?q=repede`, `?q=văz`, `/sinonime.php?q=frumos`, and
   `/api/syn.php?q=frumos` fail. Local synonym tests pass against the checked-out
   databases. Inspect server logs and verify `public/data/syn.db`, its schema,

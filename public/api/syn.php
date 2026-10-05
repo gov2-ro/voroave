@@ -8,13 +8,22 @@ require_once __DIR__ . '/_syn.php';
 header('Content-Type: text/html; charset=utf-8');
 
 if (isset($_GET['ac'])) {
-    $rows = syn_autocomplete((string) ($_GET['q'] ?? ''));
+    try {
+        $rows = syn_autocomplete((string) ($_GET['q'] ?? ''));
+    } catch (Throwable $t) {
+        // The suggestion list is optional. Answer 503 with an empty body; the page keeps working.
+        syn_report_failure($t);
+        exit;
+    }
     render('syn_autocomplete.php', ['rows' => $rows]);
     exit;
 }
 
 $q = trim((string) ($_GET['q'] ?? ''));
-$resolved     = $q !== '' ? syn_resolve($q) : ['word' => null, 'suggestions' => []];
-$neighborhood = $resolved['word'] ? syn_neighborhood($resolved['word']) : null;
+$r = syn_search($q);
+if (!$r['ok']) {
+    render('syn_unavailable.php');
+    exit;
+}
 
-render('syn_result.php', ['q' => $q, 'resolved' => $resolved, 'neighborhood' => $neighborhood]);
+render('syn_result.php', ['q' => $q, 'resolved' => $r['resolved'], 'neighborhood' => $r['neighborhood']]);

@@ -2,6 +2,28 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F01 synonym outage: diagnosis and failure handling
+
+Local fix only. The live outage stays open until the owner deploys and verifies.
+
+Live read-only GETs (no cookies): `/sinonime`, `/api/syn.php?q=` and `?ac=1&q=` returned 200. Every request
+that opens `syn.db` (`q=frumos`, `ac=1&q=fru`, `/sinonime.php?q=frumos`) returned an empty 500.
+`/api/search.php` returned 200. The failure begins at the first `syn_db()` call. Cause not confirmed;
+ranked hypotheses are in `docs/fixes/F01-synonym-deployment.md`. Top candidate: `syn.db` not deployed (gitignored).
+
+Local reproduction: a staged copy of `public/` without `syn.db` made PDO create a 0-byte file, then throw
+"no such table" uncaught. The new suite also failed against the old code (200 with leaked
+`PDOException` text under dev settings, no 503).
+
+Change: `SynUnavailable`, file and schema preflight in `syn_db()`, `syn_search()`, 503 + `Retry-After` +
+`no-store`, `error_log` of detail, `syn_unavailable.php`, a 503 swap hook in `syn.js`, CLI diagnostic
+`public/api/_syn_check.php`. Ranking, geometry, read-only behavior unchanged.
+
+Tests: `tests/test_sinonime_states.js` (healthy, unknown, empty, autocomplete with diacritics, no-JS URL, and
+fixtures: missing, empty file, not SQLite, chmod 000, renamed column, dropped table, truncated). Runner:
+`python3 tools/run_tests.py --only sinonime` passes 18 + 135 checks. Skipped: browser check of the htmx 503 swap.
+Remaining: owner deploy steps in the brief; live verification.
+
 ## 2026-10-05 — F07 strict test runner
 
 Added `tools/run_tests.py`, `package.json` (jsdom 26.1.0, playwright 1.56.1, lockfile), `pytest.ini`,

@@ -12,16 +12,89 @@ declare(strict_types=1);
 
 define('SYN_DB_PATH', __DIR__ . '/../data/syn.db');
 
+/**
+ * Operational failure of the synonym database: missing, empty, unreadable, not a SQLite
+ * file, wrong schema, or a query that fails. The message is for the server log only --
+ * it can hold a path. Visitors see syn_unavailable.php and a 503 (brief F01).
+ */
+class SynUnavailable extends RuntimeException {}
+
+/** Tables and columns the lookup code reads. A database missing any of them is incompatible. */
+const SYN_REQUIRED_SCHEMA = [
+    'word'       => ['id', 'form', 'pos', 'band'],
+    'key'        => ['k', 'word_id'],
+    'sense'      => ['id', 'label', 'reg'],
+    'sense_word' => ['sid', 'word_id'],
+    'edge'       => ['sid', 'word_id', 't'],
+];
+
+/**
+ * Check the file before PDO sees it. PDO's sqlite driver silently CREATES a missing file
+ * when the directory is writable, which turns "not deployed" into "empty database" and a
+ * misleading "no such table" error. Throws SynUnavailable with a technical message.
+ */
+function syn_db_preflight(string $path): void {
+    if (!extension_loaded('pdo_sqlite')) throw new SynUnavailable('PHP extension pdo_sqlite is not loaded');
+    if (!is_file($path))     throw new SynUnavailable("syn.db is missing: $path");
+    if (!is_readable($path)) throw new SynUnavailable("syn.db is not readable by this PHP user: $path");
+    $size = filesize($path);
+    if ($size === false || $size < 100) throw new SynUnavailable("syn.db is empty or truncated ($size bytes): $path");
+}
+
+/** Throws SynUnavailable naming the first missing table or column. */
+function syn_db_check_schema(PDO $pdo): void {
+    foreach (SYN_REQUIRED_SCHEMA as $table => $cols) {
+        $have = array_column($pdo->query('PRAGMA table_info(' . $table . ')')->fetchAll(), 'name');
+        if (!$have) throw new SynUnavailable("syn.db schema: table '$table' is missing");
+        $gone = array_diff($cols, $have);
+        if ($gone) throw new SynUnavailable("syn.db schema: table '$table' lacks column(s) " . implode(',', $gone));
+    }
+}
+
 function syn_db(): PDO {
     static $pdo = null;
     if ($pdo === null) {
-        $pdo = new PDO('sqlite:' . SYN_DB_PATH, null, null, [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-        $pdo->exec('PRAGMA query_only = ON');
+        syn_db_preflight(SYN_DB_PATH);
+        try {
+            $conn = new PDO('sqlite:' . SYN_DB_PATH, null, null, [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
+            $conn->exec('PRAGMA query_only = ON');
+            syn_db_check_schema($conn);
+        } catch (PDOException $ex) {
+            throw new SynUnavailable('syn.db cannot be opened or read: ' . $ex->getMessage(), 0, $ex);
+        }
+        $pdo = $conn;
     }
     return $pdo;
+}
+
+/**
+ * The page and the fragment endpoint both call this, so they share one failure path.
+ * Returns ['ok' => true, 'resolved' => ..., 'neighborhood' => ...] or ['ok' => false].
+ * An unknown word and an empty query are NOT failures: they come back ok with word null.
+ * On failure it logs the detail, sends 503 and no-store, and leaves the body to the caller.
+ */
+function syn_search(string $q): array {
+    try {
+        $resolved     = $q !== '' ? syn_resolve($q) : ['word' => null, 'suggestions' => []];
+        $neighborhood = $resolved['word'] ? syn_neighborhood($resolved['word']) : null;
+        return ['ok' => true, 'resolved' => $resolved, 'neighborhood' => $neighborhood];
+    } catch (Throwable $t) {
+        syn_report_failure($t);
+        return ['ok' => false, 'resolved' => ['word' => null, 'suggestions' => []], 'neighborhood' => null];
+    }
+}
+
+/** Log the technical detail server-side; send 503 so crawlers and caches do not keep it. */
+function syn_report_failure(Throwable $t): void {
+    error_log('[sinonime] unavailable: ' . get_class($t) . ': ' . $t->getMessage());
+    if (!headers_sent()) {
+        http_response_code(503);
+        header('Retry-After: 300');
+        header('Cache-Control: no-store');
+    }
 }
 
 // modelType -> short Romanian label. T and IL are inflected-form artifacts rather than

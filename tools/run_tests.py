@@ -80,6 +80,8 @@ SUITES = [
     Suite("js share seo", "js", "tests/test_share_seo.js", "built", ("ui_db",)),
     Suite("js share view", "js", "tests/test_share_view.js", "built", ("ui_db",)),
     Suite("js sinonime", "js", "tests/test_sinonime.js", "built", ("ui_db", "syn_db")),
+    Suite("js sinonime states (F01)", "js", "tests/test_sinonime_states.js", "built",
+          ("ui_db", "syn_db", "sqlite3")),
     Suite("js senses (browser)", "js", "tests/test_senses.js", "built",
           ("ui_db", "browser", "sqlite3"), 300),
     Suite("js ghici (jsdom)", "js", "tests/test_ghici.js", "built", ("ui_db", "jsdom"), 300),

@@ -7,12 +7,14 @@ require_once __DIR__ . '/api/_syn.php';
 // Reads ?q= and server-renders the whole result region, so a shared link is complete,
 // indexable, and works with JavaScript off (docs/sinonime/spec.md Phase 3).
 $q = trim((string) ($_GET['q'] ?? ''));
-$resolved     = $q !== '' ? syn_resolve($q) : ['word' => null, 'suggestions' => []];
-$neighborhood = $resolved['word'] ? syn_neighborhood($resolved['word']) : null;
+$r            = syn_search($q);   // on an operational failure: logs, sends 503, ok = false
+$unavailable  = !$r['ok'];
+$resolved     = $r['resolved'];
+$neighborhood = $r['neighborhood'];
 
 $title = 'Sinonime';
 $desc  = 'O unealtă de scris: alternative pentru cuvinte românești, ordonate după cât de vii sunt azi.';
-if ($q !== '') {
+if ($q !== '' && !$unavailable) {
     if ($resolved['word']) {
         $title = $resolved['word']['form'] . ' — sinonime';
         $desc  = 'Sinonime pentru „' . $resolved['word']['form'] . '", ordonate după folosirea de azi.';
@@ -29,7 +31,8 @@ $canonical = otios_abs_url('/sinonime' . ($q !== '' ? '?q=' . urlenc($q) : ''));
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <?= otios_skin_boot() ?>
   <title><?= e($title) ?> — Voroave</title>
-  <meta name="description" content="<?= e($desc) ?>">
+  <?php if ($unavailable): ?><meta name="robots" content="noindex">
+  <?php endif; ?><meta name="description" content="<?= e($desc) ?>">
   <link rel="canonical" href="<?= e($canonical) ?>">
   <meta property="og:title" content="<?= e($title) ?> — Voroave">
   <meta property="og:description" content="<?= e($desc) ?>">
@@ -63,7 +66,8 @@ $canonical = otios_abs_url('/sinonime' . ($q !== '' ? '?q=' . urlenc($q) : ''));
     </form>
 
     <div id="syn-result">
-      <?php render('syn_result.php', ['q' => $q, 'resolved' => $resolved, 'neighborhood' => $neighborhood]); ?>
+      <?php if ($unavailable) render('syn_unavailable.php');
+            else render('syn_result.php', ['q' => $q, 'resolved' => $resolved, 'neighborhood' => $neighborhood]); ?>
     </div>
 
     <p class="syn-attribution">

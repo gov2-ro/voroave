@@ -115,6 +115,17 @@
     if (d && window.innerWidth < 900) d.removeAttribute('open');
   }
 
+  // htmx 2 does not swap 4xx/5xx responses. A 503 from api/syn.php carries the "not
+  // available" message for #syn-result, so let that one target swap. The autocomplete 503
+  // has an empty body and stays unswapped.
+  document.addEventListener('htmx:beforeSwap', function (ev) {
+    var d = ev.detail;
+    if (d && d.xhr && d.xhr.status === 503 && d.target && d.target.id === 'syn-result') {
+      d.shouldSwap = true;
+      d.isError = false;
+    }
+  });
+
   document.addEventListener('DOMContentLoaded', function () {
     var result = document.getElementById('syn-result');
     if (result) { wire(result); collapseGraphOnNarrow(result); }
