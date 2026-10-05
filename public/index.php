@@ -55,15 +55,11 @@ global $QUICK_TAGS, $POS_OPTIONS;
   $canon = $sm ? $sm['canonical'] : site_origin() . '/';
 
   // Server-rendered word body, so a `?word=` hit ships real content instead of the
-  // empty #detail-panel div app.js used to fill client-side only. Mirrors
-  // share_relax_params()'s own separate `SELECT *` for the same hit — a third small
-  // indexed lookup here is consistent with that, not new duplication.
-  $w = null;
-  if ($sm) {
-      $st = db()->prepare('SELECT * FROM words WHERE word = ? LIMIT 1');
-      $st->execute([$sm['word']]);
-      $w = $st->fetch() ?: null;
-  }
+  // empty #detail-panel div app.js used to fill client-side only. Uses the same loader
+  // as api/word.php (senses and citations included), so direct arrival and a click
+  // show the same definition.
+  $detail = $sm ? load_word_detail($sm['word']) : null;
+  $w = $detail['w'] ?? null;
   ?>
   <title><?= e($title) ?></title>
   <meta name="description" content="<?= e($desc) ?>">
@@ -547,7 +543,7 @@ global $QUICK_TAGS, $POS_OPTIONS;
           <span class="htmx-indicator">loading…</span>
         </div>
       </div>
-      <div id="detail-panel" class="word-detail-panel<?= $w ? ' panel-open' : '' ?>"><?php if ($w) render('detail.php', ['w' => $w, 'ssr' => true]); ?></div>
+      <div id="detail-panel" class="word-detail-panel<?= $w ? ' panel-open' : '' ?>"><?php if ($detail) render('detail.php', $detail + ['ssr' => true]); ?></div>
     </div>
 
   </div><!-- .word-area -->

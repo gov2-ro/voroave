@@ -43,7 +43,7 @@ An old note is not a current measurement. Do not duplicate the same task in seve
   the single-line script. Chromium reports a syntax error. Remove the comment
   or use a block comment. Verify saved theme, skin, and text scale on direct arrival.
 
-- [ ] **P2: Shared word links lose structured senses.** [Implementation brief](fixes/F05-shared-definitions.md). Confirmed with
+- [x] **P2: Shared word links lose structured senses.** (done 2026-10-05, local only) [Implementation brief](fixes/F05-shared-definitions.md). Confirmed with
   `/?word=zapciu`: first arrival shows a flat definition with pipe-separated citations.
   Clicking the word loads three structured senses. `index.php:550` passes only
   `w` and `ssr`; `api/word.php` loads senses and citations too. Share the data-loading

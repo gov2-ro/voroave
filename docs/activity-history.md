@@ -2,6 +2,26 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-10-05 — F05 shared definitions on direct arrival
+
+Reproduction (local, staged copy of public/ with its own private dir): `/?word=zapciu` rendered the flat
+definition with pipe-joined quotations and zero `fp-sense` items. `api/word.php?word=zapciu` rendered
+`<ol class="fp-senses">` with 3 senses. `index.php` passed only the word row to the detail partial.
+
+Fix: new `load_word_detail()` and `db_has_table()` in `public/api/_lib.php`. `index.php` and `api/word.php`
+both call it and pass senses and citations explicitly. No HTTP self-request. The old-schema fallback now
+probes `sqlite_master` and covers only a missing table. Other database errors propagate.
+The SSR `<h1>`, fragment `<div>`, metadata, canonical, share-relax and pin order are unchanged.
+The `.fp-body` and `.fp-pos-line` contract with F03 is unchanged.
+
+Validation (local): new suite `tests/test_detail_parity.js` (42 checks, in the runner as "js detail parity (F05)").
+It failed 10 checks on the pre-fix code. Full `python3 tools/run_tests.py`: 21/21 suites pass.
+`private/app.db` unchanged (1791208393 1531904). Screenshots before/after at 1280px and 390px (JavaScript
+disabled) are in the session scratchpad `f05/`.
+
+Skipped: live verification. Limitation: a dev PHP server prints a database fatal error with status 200;
+the test accepts that or a 500. Production verification is an owner step after deploy (`/?word=zapciu`).
+
 ## 2026-10-05 — Test isolation guard after an app.db write
 
 During F03 diagnosis, an agent ran `tests/test_ghici.js` against a plain dev server.

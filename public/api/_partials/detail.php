@@ -1,11 +1,11 @@
 <?php
-// $w = array with word row data. $senses / $cites_by_sense come from api/word.php and
-// are [] on a ui.db built before docs/senses-plan.md landed — default them so this
+// $w = array with word row data. $senses / $cites_by_sense come from load_word_detail()
+// (_lib.php), used by api/word.php and by index.php's direct arrival. They are [] on a ui.db built before docs/senses-plan.md landed — default them so this
 // partial still renders standalone if that ever changes.
 $senses          = $senses ?? [];
 $cites_by_sense  = $cites_by_sense ?? [];
 // Set only by index.php's server-render of a `?word=` hit — api/word.php never passes
-// this, so its output stays byte-identical. A real <h1> there is what gives a `?word=`
+// this, so the only difference between the two paths is the heading tag. A real <h1> there is what gives a `?word=`
 // page indexable body content instead of an empty div app.js fills in after load.
 $ssr       = $ssr ?? false;
 $title_tag = $ssr ? 'h1' : 'div';

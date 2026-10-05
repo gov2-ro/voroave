@@ -497,6 +497,53 @@ function db(): PDO {
     return $pdo;
 }
 
+/** True when ui.db has the named table. Probed once per table per request, so an older
+ *  ui.db (built before docs/senses-plan.md) is recognised by what it lacks, not by
+ *  swallowing whatever error a query raises. */
+function db_has_table(string $table): bool {
+    static $known = [];
+    if (!array_key_exists($table, $known)) {
+        $st = db()->prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?");
+        $st->execute([$table]);
+        $known[$table] = $st->fetchColumn() !== false;
+    }
+    return $known[$table];
+}
+
+/**
+ * The one loader behind a word's detail panel (brief F05). Both `api/word.php` (click)
+ * and `index.php` (direct `?word=` arrival, no JavaScript) call it, so the two paths
+ * cannot drift apart. Returns null when the word is not in the table.
+ *
+ * Result: ['w' => word row, 'senses' => rows, 'cites_by_sense' => [sense_ord => rows]].
+ * The sense tree is additive to `$w['definition']`, never a replacement for it. A ui.db
+ * built before the feature has neither table: senses are then [] and the panel shows the
+ * flat definition. Only that case is tolerated. Any other database error propagates.
+ */
+function load_word_detail(string $word): ?array {
+    $st = db()->prepare('SELECT * FROM words WHERE word = ? LIMIT 1');
+    $st->execute([$word]);
+    $w = $st->fetch();
+    if ($w === false) return null;
+
+    $senses = [];
+    $cites_by_sense = [];
+    if (db_has_table('senses')) {
+        $sstmt = db()->prepare('SELECT * FROM senses WHERE word = ? ORDER BY ord');
+        $sstmt->execute([$word]);
+        $senses = $sstmt->fetchAll();
+    }
+    if (db_has_table('sense_citations')) {
+        $cstmt = db()->prepare(
+            'SELECT * FROM sense_citations WHERE word = ? ORDER BY sense_ord, ord');
+        $cstmt->execute([$word]);
+        foreach ($cstmt->fetchAll() as $c) {
+            $cites_by_sense[(int) $c['sense_ord']][] = $c;
+        }
+    }
+    return ['w' => $w, 'senses' => $senses, 'cites_by_sense' => $cites_by_sense];
+}
+
 function normalize_diacritics(string $s): string {
     $s = mb_strtolower($s, 'UTF-8');
     return str_replace(

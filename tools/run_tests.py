@@ -85,6 +85,8 @@ SUITES = [
           ("ui_db", "syn_db", "sqlite3")),
     Suite("js senses (browser)", "js", "tests/test_senses.js", "built",
           ("ui_db", "browser", "sqlite3"), 300),
+    Suite("js detail parity (F05)", "js", "tests/test_detail_parity.js", "built",
+          ("ui_db", "sqlite3")),
     Suite("js ghici (jsdom)", "js", "tests/test_ghici.js", "built", ("ui_db", "jsdom"), 300),
     Suite("js ghici spoilers (browser)", "js", "tests/test_ghici_browser.js", "built",
           ("ui_db", "browser"), 300),

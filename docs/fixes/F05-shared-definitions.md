@@ -1,6 +1,6 @@
 # F05 — Render the same definition on direct and interactive arrival
 
-Status: open. Priority: P2.
+Status: complete locally (2026-10-05). Not deployed. Priority: P2.
 
 ## Evidence and target
 
