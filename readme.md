@@ -83,28 +83,12 @@ Read [AGENTS.md](AGENTS.md) before changes. CLAUDE.md carries the same project g
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    DEX[Dexonline MySQL dump] --> EX[Dictionary extractors]
-    EX --> LEX[Lexemes and curated candidates]
-    EX --> INF[Inflected forms]
-    EX --> DEF[Definitions and dictionary sources]
-    WS[Wikisource] --> HIST[Historical panel]
-    LU[LUMRO] --> HIST
-    CX[CulturaX] --> MOD[Modern panel]
-    LEX --> V[Paradigm aggregation and verdicts]
-    INF --> V
-    HIST --> V
-    MOD --> V
-    V --> SCORE[Shortlist and two seams]
-    SCORE --> BUILD[UI database builder]
-    DEF --> BUILD
-    DEX --> MEAN[Structured meanings]
-    MEAN --> BUILD
-    BUILD --> UI[public/data/ui.db]
-    UI --> APP[PHP + HTMX + vanilla JS]
-    APP --> USER[Private user-data database]
-```
+[![How a word reaches the Voroave ranking: the dexonline dump gives the dictionary databases and the candidates, the historical and modern corpora give the counts, and the verdict, score and ui.db lead to the site on the solid blue route. The dashed line shows enrichment data and the curator loop.](docs/diagrams/pipeline-en.png)](docs/diagrams/pipeline-en.png)
+
+A word's rank comes from comparing dictionary entries with a historical and a modern corpus panel.
+The output is a heuristic candidate ranking. Figure source: [`docs/diagrams/`](docs/diagrams/pipeline.md).
+
+`diagram-designer` agent by [iello](https://github.com/iello/)
 
 CoRoLa and subtitles are reference datasets, excluded from the current production panels.
 Both frequency-screen scripts are standalone; neither feeds `make_shortlist.py` or `ui.db`.

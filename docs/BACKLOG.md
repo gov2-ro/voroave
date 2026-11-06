@@ -134,6 +134,25 @@ Then run a final test round, launch a public alpha, and ask for contributions.
 - [ ] **Server git maintenance.** The shared host limits threads, so the automatic `git gc` after a pull fails
   with "unable to create thread". On the server run `git config pack.threads 1` and remove `.git/gc.log`.
 
+### Pipeline figure follow-ups — 2026-11-06
+
+- [ ] **Scraped definitions affect the score.** `validate_diachronic.py` sets `has_definition` from `definitions.db`.
+  `make_shortlist.py` then adds `SCORE_HAS_DEF` (5 points). A merged `scrape_definitions.py` run can therefore change
+  the score and the seam at the next verdict and shortlist run. The effect is not measured. Measure it, then decide
+  if the points stay. The figure badge says that a definition adds points; update the badge if the rule changes.
+- [ ] **Check the figure's location in the methodology docs.** `docs/methodology-v2.md` is an aspirational menu, and
+  it holds the figure in a "The current pipeline" section. `docs/conceptual-roadmap.md` can be a better location.
+- [ ] **Decide if the readme keeps the PNG figure only.** The figure replaced the Mermaid chart in `readme.md`.
+  The chart was editable as text and is in git history.
+- [ ] **The figure is small on a phone.** On `/metodologie` at 390px the figure is 350px wide, and the text is not
+  readable without the full-size link. Consider a portrait variant for narrow screens.
+- [ ] **The „faza 3" label sits below its row.** The lines above the row leave no room, so the label can read
+  as a heading for the bottom row. The sources are in `docs/diagrams/`.
+- [ ] **`/metodologie` scrolls sideways on a phone.** At 390px the page is 496px wide, because of `.nav-links`,
+  `.scale-stepper` and `.theme-toggle`. The overflow is the same without the figure.
+- [ ] **`extract_taxonomy.py` defaults to the sample dump.** Its `--sql` default is `dex-database-sample.sql`.
+  `docs/scripts-guide.md` passes the full dump, but the command in `CLAUDE.md` does not. Align the command or the default.
+
 ### Earlier findings
 
 - [ ] **`.fp-dicts` (the "în N dicționare" row) can sit below `.fp-body`'s scrollable

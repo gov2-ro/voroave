@@ -2,6 +2,12 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-11-06 — Pipeline figure
+
+Added a hand-drawn figure of the data pipeline, in Romanian and English (sources in `docs/diagrams/`).
+The figure is in `readme.md`, where it replaces the Mermaid chart, in `docs/methodology-v2.md` and on `/metodologie`.
+The badge on the enrichment group says that a definition adds points. `has_definition` adds `SCORE_HAS_DEF` to the score, so scraped definitions are not display-only.
+
 ## 2026-10-06 — Synonym aid detached to its own project
 
 Moved the `/sinonime` writing aid to `~/devbox/sinonime`, with the history of the moved files

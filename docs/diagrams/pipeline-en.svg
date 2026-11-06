@@ -1,0 +1,283 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1230 922" width="1230" height="922"
+  font-family="'Inter Tight', Inter, sans-serif" role="img" aria-labelledby="pl-title pl-desc" xml:lang="en">
+  <title id="pl-title">How a word reaches the Voroave ranking</title>
+  <desc id="pl-desc">A word's rank comes from comparing dictionary entries with a historical and a modern corpus panel; the output is a heuristic candidate ranking. Senses, synonyms and the curator loop do not enter the score.</desc>
+  <!-- opaque paper ground and its own thin edge: the PNG also sits on a dark page -->
+  <rect x="0.75" y="0.75" width="1228.5" height="920.5" rx="6" fill="#fafaf8" stroke="#c8c1b7" stroke-width="1.5"/>
+  <defs>
+    <marker id="pl-arrow-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1a56db"/></marker>
+    <marker id="pl-arrow-b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5c5550"/></marker>
+    <marker id="pl-arrow-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#6f675f"/></marker>
+  </defs>
+
+  <!-- C: database lookups. Trunk x=434, top run y=74, bottom run y=590 -->
+  <g fill="none" stroke="#6f675f" stroke-width="1.6">
+    <path d="M394,180 H434"/>
+    <path d="M434,74 V590"/>
+    <path d="M434,74 H880"/>
+    <path d="M600,74 V96" marker-end="url(#pl-arrow-c)"/>
+    <path d="M880,74 V96" marker-end="url(#pl-arrow-c)"/>
+    <path d="M434,590 H320 V620" marker-end="url(#pl-arrow-c)"/>
+    <path d="M434,590 H798 V620" marker-end="url(#pl-arrow-c)"/>
+    <path d="M470,590 V620" marker-end="url(#pl-arrow-c)"/>
+    <path d="M510,590 V520" marker-end="url(#pl-arrow-c)"/>
+    <path d="M836,336 H984 V620" marker-end="url(#pl-arrow-c)"/>
+  </g>
+
+  <!-- B: display data and the curator loop -->
+  <g fill="none" stroke="#5c5550" stroke-width="2" stroke-dasharray="7 5">
+    <path d="M394,98 H426"/>
+    <path d="M426,98 A8,8 0 0 1 442,98" stroke-dasharray="none"/>
+    <path d="M442,98 H454 V477 H488" marker-end="url(#pl-arrow-b)"/>
+    <path d="M450,620 V598"/>
+    <path d="M450,598 A8,8 0 0 1 450,582" stroke-dasharray="none"/>
+    <path d="M450,582 V540"/>
+    <path d="M450,540 H502"/>
+    <path d="M502,540 A8,8 0 0 1 518,540" stroke-dasharray="none"/>
+    <path d="M518,540 H976"/>
+    <path d="M976,540 A8,8 0 0 1 992,540" stroke-dasharray="none"/>
+    <path d="M992,540 H1040"/>
+    <path d="M540,540 V520" marker-end="url(#pl-arrow-b)"/>
+    <path d="M790,540 V520" marker-end="url(#pl-arrow-b)"/>
+    <path d="M1040,540 V520" marker-end="url(#pl-arrow-b)"/>
+    <path d="M680,520 V532"/>
+    <path d="M680,532 A8,8 0 0 1 680,548" stroke-dasharray="none"/>
+    <path d="M680,548 V558 H876 V620" marker-end="url(#pl-arrow-b)"/>
+    <path d="M1120,520 V558 H1006 V620" marker-end="url(#pl-arrow-b)"/>
+    <path d="M745,434 V416 H462"/>
+    <path d="M462,416 A8,8 0 0 0 446,416" stroke-dasharray="none"/>
+    <path d="M446,416 H442"/>
+    <path d="M442,416 A8,8 0 0 0 426,416" stroke-dasharray="none"/>
+    <path d="M426,416 H394" marker-end="url(#pl-arrow-b)"/>
+    <path d="M800,730 V752 H316 V801" marker-end="url(#pl-arrow-b)"/>
+    <path d="M1090,730 V790" marker-end="url(#pl-arrow-b)"/>
+    <path d="M1170,790 V730" marker-end="url(#pl-arrow-b)"/>
+    <path d="M912,844 H882" marker-end="url(#pl-arrow-b)"/>
+    <path d="M590,844 H560" marker-end="url(#pl-arrow-b)"/>
+    <path d="M450,801 V776 H840 V730" marker-end="url(#pl-arrow-b)"/>
+  </g>
+
+  <!-- A: the evidence path that decides verdict and score -->
+  <g fill="none" stroke="#1a56db" stroke-width="3">
+    <path d="M110,130 V166" marker-end="url(#pl-arrow-a)"/>
+    <path d="M110,434 V472" marker-end="url(#pl-arrow-a)"/>
+    <path d="M110,558 V620" marker-end="url(#pl-arrow-a)"/>
+    <path d="M620,276 V304" marker-end="url(#pl-arrow-a)"/>
+    <path d="M790,204 V304" marker-end="url(#pl-arrow-a)"/>
+    <path d="M566,336 H462 A8,8 0 0 0 446,336 H442 A8,8 0 0 0 426,336 H414 V408 A8,8 0 0 1 414,424 V572 H200 V620" marker-end="url(#pl-arrow-a)"/>
+    <path d="M370,675 H406" marker-end="url(#pl-arrow-a)"/>
+    <path d="M746,675 H782" marker-end="url(#pl-arrow-a)"/>
+    <path d="M1022,675 H1058" marker-end="url(#pl-arrow-a)"/>
+  </g>
+
+  <!-- phase 1 -->
+    <g>
+      <rect x="24" y="24" width="216" height="32" rx="16" fill="#eaf0ff" stroke="#1a56db" stroke-width="1"/>
+      <text fill="#15348f" text-anchor="middle" font-size="18" font-weight="600" x="132.0" y="46">phase 1 · dictionary</text>
+    </g>
+    <g>
+      <rect x="24" y="66" width="370" height="64" rx="8" fill="#eaf0ff" stroke="#1a56db" stroke-width="1.5"/>
+      <text fill="#18150f" text-anchor="middle" font-size="18">
+      <tspan x="209" y="93" font-family="'JetBrains Mono', monospace" font-weight="500">dex-database.sql</tspan>
+      <tspan x="209" y="115">dexonline MySQL dump, 1.65 GB</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="24" y="166" width="370" height="268" rx="8" fill="#eaf0ff" stroke="#1a56db" stroke-width="1.5"/>
+      <text fill="#18150f" font-size="18" font-weight="600" x="38" y="190">the four dictionary databases</text>
+      <line x1="38" x2="380" y1="198" y2="198" stroke="#b9c8ec" stroke-width="1"/>
+      <line x1="38" x2="380" y1="270" y2="270" stroke="#b9c8ec" stroke-width="1"/>
+      <line x1="38" x2="380" y1="324" y2="324" stroke="#b9c8ec" stroke-width="1"/>
+      <line x1="38" x2="380" y1="378" y2="378" stroke="#b9c8ec" stroke-width="1"/>
+      <text fill="#18150f" font-size="18" font-family="'JetBrains Mono', monospace" font-weight="500" x="38" y="216">lexemes.db</text>
+      <text fill="#18150f" font-size="18" text-anchor="end" x="380" y="216">headwords, tags</text>
+      <text fill="#5c5550" font-size="18" font-family="'JetBrains Mono', monospace" x="38" y="238">extract_lexemes.py +</text>
+      <text fill="#5c5550" font-size="18" font-family="'JetBrains Mono', monospace" x="38" y="260">extract_taxonomy.py</text>
+      <text fill="#18150f" font-size="18" font-family="'JetBrains Mono', monospace" font-weight="500" x="38" y="292">inflected_forms.db</text>
+      <text fill="#18150f" font-size="18" text-anchor="end" x="380" y="292">inflected forms</text>
+      <text fill="#5c5550" font-size="18" font-family="'JetBrains Mono', monospace" x="38" y="314">extract_inflected_forms.py</text>
+      <text fill="#18150f" font-size="18" font-family="'JetBrains Mono', monospace" font-weight="500" x="38" y="346">dict_sources.db</text>
+      <text fill="#18150f" font-size="18" text-anchor="end" x="380" y="346">dictionaries, years</text>
+      <text fill="#5c5550" font-size="18" font-family="'JetBrains Mono', monospace" x="38" y="368">extract_dict_sources.py</text>
+      <text fill="#18150f" font-size="18" font-family="'JetBrains Mono', monospace" font-weight="500" x="38" y="400">definitions.db</text>
+      <text fill="#18150f" font-size="18" text-anchor="end" x="380" y="400">definitions</text>
+      <text fill="#5c5550" font-size="18" font-family="'JetBrains Mono', monospace" x="38" y="422">extract_definitions.py</text>
+    </g>
+    <text fill="#5c5550" font-size="18" font-family="'JetBrains Mono', monospace" x="122" y="459">lexemes.db</text>
+    <g>
+      <rect x="24" y="472" width="370" height="86" rx="8" fill="#eaf0ff" stroke="#1a56db" stroke-width="1.5"/>
+      <text fill="#18150f" text-anchor="middle" font-size="18">
+      <tspan x="209" y="499" font-family="'JetBrains Mono', monospace" font-weight="500">create_curated_list.py</tspan>
+      <tspan x="209" y="521" font-family="'JetBrains Mono', monospace" font-weight="500">forgotten_words_curated.csv</tspan>
+      <tspan x="209" y="543">candidates: the words to check</tspan>
+      </text>
+    </g>
+  <!-- phase 2 -->
+    <g>
+      <rect x="468" y="24" width="176" height="32" rx="16" fill="#eaf0ff" stroke="#1a56db" stroke-width="1"/>
+      <text fill="#15348f" text-anchor="middle" font-size="18" font-weight="600" x="556.0" y="46">phase 2 · corpora</text>
+    </g>
+    <rect x="468" y="96" width="265" height="180" rx="8" fill="none" stroke="#8a8278" stroke-width="1"/>
+    <text fill="#18150f" font-size="18" font-weight="600" text-anchor="middle" x="600.5" y="120">historical panel: 19.4M tokens</text>
+    <g>
+      <rect x="478" y="130" width="245" height="64" rx="8" fill="#eaf0ff" stroke="#1a56db" stroke-width="1.5"/>
+      <text fill="#18150f" text-anchor="middle" font-size="18">
+      <tspan x="600.5" y="157" font-family="'JetBrains Mono', monospace" font-weight="500">process_wikisource.py</tspan>
+      <tspan x="600.5" y="179">Wikisource, 14.3M</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="478" y="202" width="245" height="64" rx="8" fill="#eaf0ff" stroke="#1a56db" stroke-width="1.5"/>
+      <text fill="#18150f" text-anchor="middle" font-size="18">
+      <tspan x="600.5" y="229" font-family="'JetBrains Mono', monospace" font-weight="500">process_lumro.py</tspan>
+      <tspan x="600.5" y="251">LUMRO novels, 5.07M</tspan>
+      </text>
+    </g>
+    <rect x="749" y="96" width="265" height="108" rx="8" fill="none" stroke="#8a8278" stroke-width="1"/>
+    <text fill="#18150f" font-size="18" font-weight="600" text-anchor="middle" x="881.5" y="120">modern panel</text>
+    <g>
+      <rect x="759" y="130" width="245" height="64" rx="8" fill="#eaf0ff" stroke="#1a56db" stroke-width="1.5"/>
+      <text fill="#18150f" text-anchor="middle" font-size="18">
+      <tspan x="881.5" y="157" font-family="'JetBrains Mono', monospace" font-weight="500">process_culturax.py</tspan>
+      <tspan x="881.5" y="179">CulturaX, 16.97B</tspan>
+      </text>
+    </g>
+    <text fill="#5c5550" font-size="18" font-family="'JetBrains Mono', monospace" x="892" y="80">lexemes.db</text>
+    <g>
+      <rect x="1030" y="96" width="176" height="108" rx="8" fill="#f4f1eb" stroke="#8a8278" stroke-width="1.2"/>
+      <text fill="#5c5550" text-anchor="middle" font-size="18">
+      <tspan x="1118" y="123">CoRoLa, subtitles:</tspan>
+      <tspan x="1118" y="145">reference only,</tspan>
+      <tspan x="1118" y="167">in no panel,</tspan>
+      <tspan x="1118" y="189">no part in verdicts</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="566" y="304" width="270" height="64" rx="8" fill="#eaf0ff" stroke="#1a56db" stroke-width="1.5"/>
+      <text fill="#18150f" text-anchor="middle" font-size="18">
+      <tspan x="701" y="331" font-family="'JetBrains Mono', monospace" font-weight="500">corpus_frequencies.db</tspan>
+      <tspan x="701" y="353">counts per form, per corpus</tspan>
+      </text>
+    </g>
+  <!-- legend -->
+    <line x1="1000" x2="1050" y1="228" y2="228" stroke="#1a56db" stroke-width="3"/>
+    <line x1="1000" x2="1050" y1="288" y2="288" stroke="#5c5550" stroke-width="2" stroke-dasharray="7 5"/>
+    <line x1="1000" x2="1050" y1="348" y2="348" stroke="#6f675f" stroke-width="1.6"/>
+    <text fill="#18150f" font-size="18" x="1000" y="248">evidence: decides the</text>
+    <text fill="#18150f" font-size="18" x="1000" y="269">verdict and the score</text>
+    <text fill="#5c5550" font-size="18" x="1000" y="308">enrichment data and</text>
+    <text fill="#5c5550" font-size="18" x="1000" y="329">the curator loop</text>
+    <text fill="#5c5550" font-size="18" x="1000" y="368">database lookup; the</text>
+    <text fill="#5c5550" font-size="18" x="1000" y="389">label says which</text>
+  <!-- enrichment -->
+    <g>
+      <rect x="488" y="376" width="470" height="32" rx="16" fill="#f4f1eb" stroke="#8a8278" stroke-width="1" stroke-dasharray="5 4"/>
+      <text fill="#5c5550" text-anchor="middle" font-size="18" font-weight="600" x="723.0" y="398">enrichment: display; a definition also adds points</text>
+    </g>
+    <g>
+      <rect x="488" y="434" width="222" height="86" rx="8" fill="#ffffff" stroke="#8a8278" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text fill="#5c5550" text-anchor="middle" font-size="18">
+      <tspan x="599" y="461" font-family="'JetBrains Mono', monospace" font-weight="500">extract_meanings.py</tspan>
+      <tspan x="599" y="483" font-family="'JetBrains Mono', monospace" font-weight="500">meanings.db</tspan>
+      <tspan x="599" y="505">senses, from the dump</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="722" y="434" width="250" height="86" rx="8" fill="#ffffff" stroke="#8a8278" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text fill="#5c5550" text-anchor="middle" font-size="18">
+      <tspan x="847" y="461" font-family="'JetBrains Mono', monospace" font-weight="500">scrape_definitions.py</tspan>
+      <tspan x="847" y="483" font-family="'JetBrains Mono', monospace" font-weight="500">definitions.db</tspan>
+      <tspan x="847" y="505">missing text: dexonline.ro</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="996" y="434" width="210" height="86" rx="8" fill="#ffffff" stroke="#8a8278" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text fill="#5c5550" text-anchor="middle" font-size="18">
+      <tspan x="1101" y="461" font-family="'JetBrains Mono', monospace" font-weight="500">scrape_synonyms.py</tspan>
+      <tspan x="1101" y="483" font-family="'JetBrains Mono', monospace" font-weight="500">synonyms.db</tspan>
+      <tspan x="1101" y="505">synonyms: dexonline.ro</tspan>
+      </text>
+    </g>
+    <text fill="#5c5550" font-size="18" font-family="'JetBrains Mono', monospace" x="516" y="577">lexemes.db</text>
+  <!-- phase 3 -->
+    <text fill="#5c5550" font-size="18" text-anchor="end" x="314" y="612">all 4</text>
+    <text fill="#5c5550" font-size="18" font-family="'JetBrains Mono', monospace" x="478" y="612">inflected_forms.db</text>
+    <text fill="#5c5550" font-size="18" x="806" y="612">all 4</text>
+    <g>
+      <rect x="24" y="620" width="346" height="110" rx="8" fill="#eaf0ff" stroke="#1a56db" stroke-width="1.5"/>
+      <text fill="#18150f" text-anchor="middle" font-size="18">
+      <tspan x="197" y="648" font-family="'JetBrains Mono', monospace" font-weight="500">validate_diachronic.py</tspan>
+      <tspan x="197" y="670" font-family="'JetBrains Mono', monospace" font-weight="500">forgotten_words_diachronic.csv</tspan>
+      <tspan x="197" y="692">a verdict for each word; rolls</tspan>
+      <tspan x="197" y="714">forms up over the paradigm</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="406" y="620" width="340" height="110" rx="8" fill="#1a56db" stroke="#15348f" stroke-width="1.5"/>
+      <text fill="#ffffff" text-anchor="middle" font-size="18">
+      <tspan x="576" y="648" font-family="'JetBrains Mono', monospace" font-weight="500">make_shortlist.py</tspan>
+      <tspan x="576" y="670" font-family="'JetBrains Mono', monospace" font-weight="500">forgotten_words_shortlist.csv</tspan>
+      <tspan x="576" y="692">shortlist, heuristic score: 18,270</tspan>
+      <tspan x="576" y="714">relevant 3,499 · curiosity 14,771</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="782" y="620" width="240" height="110" rx="8" fill="#eaf0ff" stroke="#1a56db" stroke-width="1.5"/>
+      <text fill="#18150f" text-anchor="middle" font-size="18">
+      <tspan x="902" y="659" font-family="'JetBrains Mono', monospace" font-weight="500">tools/build_ui_db.py</tspan>
+      <tspan x="902" y="681" font-family="'JetBrains Mono', monospace" font-weight="500">public/data/ui.db</tspan>
+      <tspan x="902" y="703">the site's database</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="1058" y="620" width="148" height="110" rx="8" fill="#eaf0ff" stroke="#1a56db" stroke-width="1.5"/>
+      <text fill="#18150f" text-anchor="middle" font-size="18">
+      <tspan x="1132" y="648" font-family="'JetBrains Mono', monospace" font-weight="500">voroave.ro</tspan>
+      <tspan x="1132" y="670">public site:</tspan>
+      <tspan x="1132" y="692">PHP, HTMX,</tspan>
+      <tspan x="1132" y="714">vanilla JS</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="24" y="742" width="240" height="32" rx="16" fill="#eaf0ff" stroke="#1a56db" stroke-width="1"/>
+      <text fill="#15348f" text-anchor="middle" font-size="18" font-weight="600" x="144.0" y="764">phase 3 · verdicts, score, UI</text>
+    </g>
+  <!-- app and curator loop -->
+    <text fill="#5c5550" font-size="18" text-anchor="end" x="1082" y="766">marks</text>
+    <text fill="#5c5550" font-size="18" text-anchor="end" x="1162" y="766">votes</text>
+    <g>
+      <rect x="912" y="790" width="294" height="108" rx="8" fill="#ffffff" stroke="#8a8278" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text fill="#5c5550" text-anchor="middle" font-size="18">
+      <tspan x="1059" y="817" font-family="'JetBrains Mono', monospace" font-weight="500">app.db</tspan>
+      <tspan x="1059" y="839">private: readers' marks;</tspan>
+      <tspan x="1059" y="861">votes only reorder the list,</tspan>
+      <tspan x="1059" y="883">live, and never enter ui.db</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="590" y="801" width="292" height="86" rx="8" fill="#ffffff" stroke="#8a8278" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text fill="#5c5550" text-anchor="middle" font-size="18">
+      <tspan x="736" y="828" font-family="'JetBrains Mono', monospace" font-weight="500">tools/export_editorial.py</tspan>
+      <tspan x="736" y="850">marks of one</tspan>
+      <tspan x="736" y="872">named curator</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="346" y="801" width="214" height="86" rx="8" fill="#ffffff" stroke="#8a8278" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text fill="#5c5550" text-anchor="middle" font-size="18">
+      <tspan x="453" y="828" font-family="'JetBrains Mono', monospace" font-weight="500">data/editorial.tsv</tspan>
+      <tspan x="453" y="850">in git; only edge from</tspan>
+      <tspan x="453" y="872">the app into the build</tspan>
+      </text>
+    </g>
+    <g>
+      <rect x="122" y="801" width="212" height="86" rx="8" fill="#ffffff" stroke="#8a8278" stroke-width="1.2" stroke-dasharray="5 4"/>
+      <text fill="#5c5550" text-anchor="middle" font-size="18">
+      <tspan x="228" y="828" font-family="'JetBrains Mono', monospace" font-weight="500">data/word_ids.tsv</tspan>
+      <tspan x="228" y="850">permanent id</tspan>
+      <tspan x="228" y="872">registry, in git</tspan>
+      </text>
+    </g>
+    <text fill="#5c5550" font-size="18" font-weight="600" x="24" y="838">app and</text>
+    <text fill="#5c5550" font-size="18" font-weight="600" x="24" y="860">curator</text>
+</svg>

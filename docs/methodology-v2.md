@@ -16,6 +16,17 @@
 > Companion to `docs/conceptual-roadmap.md` (which lays out the *minimum
 > credible* methodology). This doc goes wider.
 
+## The current pipeline
+
+The reframes below are proposals. This figure shows what the project runs now.
+
+[![How a word reaches the Voroave ranking: the dexonline dump gives the dictionary databases and the candidates, the historical and modern corpora give the counts, and the verdict, score and ui.db lead to the site on the solid blue route. The dashed line shows enrichment data and the curator loop.](diagrams/pipeline-en.png)](diagrams/pipeline-en.png)
+
+A word's rank comes from comparing dictionary entries with a historical and a modern corpus panel.
+The output is a heuristic candidate ranking. Figure source: [`docs/diagrams/`](diagrams/pipeline.md).
+
+`diagram-designer` agent by [iello](https://github.com/iello/)
+
 ## Reframe 0: Pick a user
 
 Methodology depends on what the output is *for*. Same word list serves
