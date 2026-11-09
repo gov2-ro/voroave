@@ -35,27 +35,32 @@ already counted, so it cannot add these words to an existing run.
 
 Report all six, then wait for "go" from the owner or `voroave-local`.
 
-## Phase 2 — after "go"
+## Phase 2 — after "go" (revised 2026-11-09 after the Phase 1 report)
 
-0. Back up `lexemes.db`. If the dump is present, run `python extract_lexemes.py` then `python extract_taxonomy.py`
-   (about 10 s each). The counts must be 317,721 and 439. If they differ, stop. If the dump is absent, stop and
-   ask the owner to copy the refreshed `lexemes.db` from the Mac.
-1. `cp data/processed/corpus_frequencies.db data/processed/corpus_frequencies.bak-2026-11-09.db`
+Phase 1 found: no dump on the VPS, no `lumro.zip`, a 17 MB `corpus_frequencies.db` holding `culturax_ro` only,
+3.2 GB free. CulturaX streams row groups through `HfFileSystem`, so it downloads no full shards.
+So the VPS recounts **CulturaX only**. Wikisource and LUMRO are recounted on the owner's Mac.
+
+0. `git pull --ff-only` (the untracked `__MACOSX/`, `*.tar.gz`, `public.zip` do not conflict; leave them).
+1. Wait for the owner to copy the refreshed lexemes DB to `data/processed/lexemes.refreshed.db`.
+   Check it: `select count(*) from Lexeme` = 317,721 and `select count(*) from Tag` = 439. If not, stop.
+   Then `cp data/processed/lexemes.db data/processed/lexemes.bak-2026-11-09.db` and
+   `mv data/processed/lexemes.refreshed.db data/processed/lexemes.db`.
+2. `cp data/processed/corpus_frequencies.db data/processed/corpus_frequencies.bak-2026-11-09.db`
    `cp data/processed/corpus_frequencies.db data/processed/corpus_frequencies.v2.db`
-   In the v2 copy only, delete the rows of `wikisource_ro`, `lumro_ro` and `culturax_ro` from every table that
-   holds a `corpus_name` column. Keep `corola_ro` and `subtitle_ro`. Run `VACUUM` on the copy.
-2. `python process_wikisource.py --db data/processed/corpus_frequencies.v2.db`
-   `python process_lumro.py --db data/processed/corpus_frequencies.v2.db`
-   Compare token totals with the old DB. They must match within 0.1%. If not, stop.
-3. Start CulturaX in the background, with `nohup`, the log in `data/logs/culturax_v2.log` and the PID in
+   In the v2 copy only, delete the `culturax_ro` rows from every table with a `corpus_name` column. `VACUUM` it.
+3. Check that `python -c "import process_culturax as p; print(len(p.load_dex_words(p.LEXEMES_DB)))"` prints a
+   number larger than the old lookup set (the old set lacked 3,184 `V` lemmas). Report both numbers if you can.
+4. Start CulturaX in the background with `nohup`, the log in `data/logs/culturax_v2.log` and the PID in
    `data/logs/culturax_v2.pid`:
    `python process_culturax.py --db data/processed/corpus_frequencies.v2.db --resume`
    A non-default `--db` has its own checkpoint (`corpus_frequencies.v2.culturax_checkpoint.json`), so the first
-   `--resume` starts from document 0. If a restart-loop script runs the main job, copy it for v2; do not edit it.
-4. Check after 30 minutes that the checkpoint advances. Report the rate and the ETA, then stop.
+   `--resume` starts from document 0. The first run stopped on network errors and needed restarts; if the process
+   exits before completion, restart it with the same command (it resumes). Do not edit the old loop or checkpoint.
+5. After 30 minutes, check that the checkpoint advances. Report the rate and the ETA, then stop.
 
 ## Phase 3 — after CulturaX completes (a later session)
 
-Compare `râde`, `țepeni`, `electricitate` and the token totals between the old DB and v2. Report them.
-The owner copies v2 to the Mac. There it replaces the live DB (keep the old one), and F11 Step 2 runs again
-from `validate_diachronic.py`.
+Compare `râde`, `țepeni`, `electricitate` and the token totals (`processing_stats`) between the old DB and v2.
+Totals must match within 0.1%. Report them. The owner copies v2 to the Mac, where its `culturax_ro` rows are merged
+into the Mac's v2 (which has the recounted Wikisource and LUMRO). F11 Step 2 then runs again from `validate_diachronic.py`.
