@@ -2,6 +2,15 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-11-10 — Definition bonus removed; relevant threshold 87
+
+Owner decision, from `docs/eval/definition-bonus.md`: `SCORE_HAS_DEF` 5 → 0 and `RELEVANT_MIN_SCORE` 92 → 87.
+Every word with a definition keeps its seam; 6 words without one join `relevant` (`alău`, `blăni`, `hiriș` visible).
+Definition scrapes no longer move words between seams. Two tests pin it; both fail on the old code.
+`tools/eval_sample.py` keeps its 92 band edge so sample v1 reproduces. The pipeline figure's badge now reads
+"display only; no points" (EN and RO); both PNGs were re-rendered in Chromium at 2× with Inter Tight embedded,
+because only Inter is installed (the fallback widened the labels). Takes effect at the next shortlist run.
+
 ## 2026-11-09 — F11 Step 4: Wikisource and LUMRO recounted; CulturaX handed to the VPS
 
 Recounted Wikisource and LUMRO on the Mac into `corpus_frequencies.v2.db`, with the `V` lemmas and the refreshed

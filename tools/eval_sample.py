@@ -44,7 +44,8 @@ DEFAULT_SEED = "f09-voroave-eval-v1"
 DEFAULT_N = 1200
 FLOOR_PER_CELL = 3
 DEV_SHARE_PERCENT = 40            # 40% development, 60% held-out test, by lemma group
-SCORE_EDGES = (60, 80, 92, 105)   # band edges; 92 is RELEVANT_MIN_SCORE
+SCORE_EDGES = (60, 80, 92, 105)   # band edges; 92 was RELEVANT_MIN_SCORE when sample v1 was drawn
+                                  # (with the definition bonus). Unchanged so sample v1 reproduces.
 SCORE_BAND_NAMES = ("lt60", "60-79", "80-91", "92-104", "ge105")
 
 ROOT = Path(__file__).resolve().parent.parent

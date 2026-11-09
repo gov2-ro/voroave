@@ -1,6 +1,11 @@
 # The five-point definition bonus (`SCORE_HAS_DEF`)
 
-Measured 2026-11-09 for [F11](../fixes/F11-local-followups.md) Step 3. No weight was changed. The owner decides.
+Measured 2026-11-09 for [F11](../fixes/F11-local-followups.md) Step 3.
+
+**Decision 2026-11-10 (owner): option 2.** `SCORE_HAS_DEF = 0` and `RELEVANT_MIN_SCORE = 87`. The 6 words without a
+definition join the `relevant` seam; the curator demotes any that read badly. Pinned by `tests/test_make_shortlist.py`
+(`test_a_definition_adds_no_points`, `test_a_definition_scrape_cannot_change_the_seam`). The pipeline figure says
+"display only; no points". It takes effect at the next `make_shortlist.py` run.
 
 ## Rule
 

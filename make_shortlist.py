@@ -105,7 +105,11 @@ SCORE_DEX_FREQ = [(0.95, 20), (0.85, 17), (0.70, 13), (0.50, 8), (0.30, 4)]
 SCORE_DICTS    = [(15, 12), (10, 10), (6, 8), (3, 5), (2, 3)]
 
 SCORE_CURRENT_DICT = 13
-SCORE_HAS_DEF      = 5
+# No bonus for having a definition (owner decision 2026-11-10; docs/eval/definition-bonus.md).
+# 94% of the shortlist has one, so 5 points lifted nearly every word, and each definition
+# scrape moved words between seams with no new corpus evidence (68 after the 2026-08-17
+# merge). A definition is a display matter. RELEVANT_MIN_SCORE dropped by the same 5 points.
+SCORE_HAS_DEF      = 0
 PENALTY_FAMILY     = 8
 
 # `regional_only` and `variant_like` deliberately carry **no score penalty**. They are
@@ -116,11 +120,13 @@ PENALTY_FAMILY     = 8
 # until asked for. The score says how good the evidence is; the flags say what you would
 # rather not look at, and you can change your mind about the second.
 
-# Tuned by inspecting the seam at 76 / 82 / 88 / 92: below ~92 the relevant seam starts
+# Tuned by inspecting the seam at 76 / 82 / 88 / 92, when a definition still added 5 points;
+# 87 is that 92 without the bonus. Measured on 2026-11-09 data it keeps every word that has a
+# definition and adds 6 that have none. The tuning note, in the old units: below ~92 the relevant seam starts
 # taking in dictionary-only curiosities (potricală, țarțam, sărciner) that were never in
 # circulation. At 92 it holds ~2.3k words and reads like poronci, jeț, jiganie, iznoavă,
 # vorovi, ciocoism, prepelicar, spoliație, poetastru.
-RELEVANT_MIN_SCORE = 92
+RELEVANT_MIN_SCORE = 87
 
 # Min dex_frequency for a word with no corpus signal at all to qualify. The old code had
 # this as 0.70 in classify()'s signature and 0.85 on the CLI, so the gate moved depending

@@ -125,7 +125,8 @@ The account-recovery decision, the spot-check marks, the marking interface, lice
 - [ ] **Public alpha prerequisites and dictionary-source permission review.** The items are in "Public alpha
   readiness — 2026-10-05" below: the dexonline source licence list, `/stats` report access, production
   configuration, the "browser is the account" notice, a code licence (owner's choice), and the sample `ui.db`.
-- [ ] **Decide on the five-point definition bonus (`SCORE_HAS_DEF`).** Measured 2026-11-09:
+- [x] **Decide on the five-point definition bonus (`SCORE_HAS_DEF`).** Decided 2026-11-10: no bonus, threshold 87
+  (+6 relevant words without a definition, none removed; the curator demotes any that read badly). Measured 2026-11-09:
   [docs/eval/definition-bonus.md](eval/definition-bonus.md). At a recalibrated threshold it changes 6 seam members and
   moves other words by ≤ 3 places; its cost is drift (the 2026-08-17 scrape moved 68 words into `relevant`). Owner decides.
   Original entry: **Measure the ranking effect of the five-point definition bonus.** Moved here from "Pipeline
@@ -154,6 +155,32 @@ The account-recovery decision, the spot-check marks, the marking interface, lice
   144,459 lookup forms and runs at about 820 docs/s; ETA about 13.7 h (2026-11-10, around 11:00 VPS time) if there
   are no network restarts. Next: VPS Phase 3 (compare totals), copy its v2 to the Mac, merge `culturax_ro` into the
   Mac v2, then F11 Step 2 again from `validate_diachronic.py` and `build_ui_db.py`.
+  After that rebuild, also update the counts in the pipeline figure (it shows 18,270 / relevant 3,499 / curiosity 14,771)
+  and in `AGENTS.md` ("Seams"); re-render the PNGs with Inter Tight embedded (it is not installed on the Mac).
+
+### Cross-project requests — 2026-11-10
+
+- [ ] **Link to wROdfreq from the README and the website.** Requested by the owner on
+  2026-11-10, from the wROdfreq project. wROdfreq is the Romanian word-frequency table
+  built from oțios's tokenizer and DEX paradigm map (`~/devbox/gov2/wrodfreq`,
+  <https://github.com/gov2-ro/wrodfreq>). Version 0.2.1 is tagged on GitHub (`v0.2.1`); the
+  final table is a Google Drive review copy linked from its README. It is not on PyPI yet,
+  so do not link a `pip install` command. Add the link in three places:
+  1. `README.md` — one line near the frequency sources (the wordfreq and archived recipe
+     links), naming wROdfreq and its GitHub URL.
+  2. `public/metodologie.html` — line ~1064 already names "wRodfreq" without a link. Spell
+     it `wROdfreq`, link it to the GitHub repository, and say in one sentence what it is:
+     a Romanian frequency table on the Zipf scale, from six open corpora, with per-source
+     reliability counts.
+  3. `public/despre.html` — a short "related projects" mention with the same link.
+  Deploy with the next batch (see "Owner decisions and operations" above). Wording stays in
+  Romanian and follows the site's existing style.
+- [ ] **Re-run `validate_with_wrodfreq.py` against wROdfreq 0.2.1.** The wROdfreq 0.2.0
+  data had two defects, fixed in 0.2.1 (build `9550cd80441597586fa1a74eaf9069b2`):
+  the `social` counts held a test run twice (30,155,307 extra tokens), and 2,382 lemmas had
+  `family_ratio` below 1. Any oțios result or text that used 0.2.0 numbers should be
+  re-measured. The sibling checkout's `wrodfreq/data/` now holds 0.2.1 (data format 2); an
+  editable install picks it up. Details: wROdfreq `docs/activity-history.md`, 2026-11-09.
 
 ### Public alpha readiness — 2026-10-05
 

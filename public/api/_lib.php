@@ -52,6 +52,8 @@ $SORT_OPTIONS = [
  * spans 92–121, with 76% of its 3,499 words inside a ten-point band, so a linear weight
  * of even 5/vote would let four votes carry a word from the median to the top forty.
  * Against that span, 20 forged votes buy ~12 points: real movement, not the top.
+ * (Measured with the 5-point definition bonus; since 2026-11-10 the scale starts at 87,
+ * the same spread 5 points lower, so the bands keep their effect.)
  *
  * Votes can only ever reorder. Nothing here removes a row — see vote_counts_subquery().
  */

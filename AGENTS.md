@@ -741,7 +741,8 @@ Two things to keep:
   even 5/vote lets four votes carry a word from the median to the top forty. On the ladder,
   each *doubling* of the vote count is worth about two more points — measured: `barabor`
   carries 20 ★ votes (every one of them a test fixture) and the blend moves it 92 → 104,
-  well short of `văz` at 121.
+  well short of `văz` at 121. (Measured with the definition bonus. Since 2026-11-10 the
+  scale is 5 points lower — the seam starts at 87 — and the spread is the same.)
 - **`search.php` joins the vote counts only for this sort**, and the subquery's key column
   is aliased `vote_word` — joined as `word` it would make every unqualified `word` in
   `build_word_filter()`'s conditions ambiguous, and those conditions are shared with the

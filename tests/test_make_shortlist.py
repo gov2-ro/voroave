@@ -178,6 +178,21 @@ def test_current_dictionary_raises_score():
     assert ms.score(BASE_ROW) > ms.score({**BASE_ROW, 'in_current_dict': '0'})
 
 
+def test_a_definition_adds_no_points():
+    """Owner decision 2026-11-10 (docs/eval/definition-bonus.md). A definition is a display
+    matter; scoring it let every definition scrape move words between seams."""
+    assert ms.score({**BASE_ROW, 'has_definition': '0'}) == ms.score(BASE_ROW)
+
+
+def test_a_definition_scrape_cannot_change_the_seam(tmp_path):
+    rows = [{**BASE_ROW, 'word': 'cudef'}, {**BASE_ROW, 'word': 'faradef', 'has_definition': '0'}]
+    make_diachronic_csv(tmp_path / 'in.csv', rows)
+    out = {r['word']: r for r in run(tmp_path / 'in.csv', tmp_path / 'out.csv', '--no-dedup')}
+    assert out['cudef']['seam'] == out['faradef']['seam']
+    assert out['cudef']['quality_score'] == out['faradef']['quality_score']
+    assert ms.RELEVANT_MIN_SCORE == 87     # the former 92 minus the former 5-point bonus
+
+
 def test_regional_and_variant_carry_no_score_penalty():
     """Evidence quality and editorial preference are kept apart. Penalising these here
     as well as hiding them in the UI meant no such word could reach the relevant seam,

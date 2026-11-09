@@ -172,7 +172,7 @@
   <!-- enrichment -->
     <g>
       <rect x="488" y="376" width="470" height="32" rx="16" fill="#f4f1eb" stroke="#8a8278" stroke-width="1" stroke-dasharray="5 4"/>
-      <text fill="#5c5550" text-anchor="middle" font-size="18" font-weight="600" x="723.0" y="398">îmbogățire: afișare; o definiție aduce și puncte</text>
+      <text fill="#5c5550" text-anchor="middle" font-size="18" font-weight="600" x="723.0" y="398">îmbogățire: doar afișare, fără puncte</text>
     </g>
     <g>
       <rect x="488" y="434" width="222" height="86" rx="8" fill="#ffffff" stroke="#8a8278" stroke-width="1.2" stroke-dasharray="5 4"/>
