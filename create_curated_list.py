@@ -22,15 +22,15 @@ from constants import (
     RARE_MAX,
     UNCOMMON_MAX,
     rarity_category,
+    tag_family,
 )
 
 DB_PATH = "data/processed/lexemes.db"
 OUTPUT_CSV = "data/processed/forgotten_words_curated.csv"
 
-_REGISTER_PARENT  = 42
-_DOMAIN_PARENT    = 41
-_ETYMOLOGY_PARENT = 1
-_REGION_PARENT    = 17  # children: Banat, Moldova, Transilvania, etc.
+# Tag families (register / domain / etymology) come from constants.tag_family(), the
+# same rule validate_diachronic.load_taxonomy() uses. It includes the root tags 6
+# (`rar`), 17 (`regional`) and 239 (`ieșit din uz`), which a parent-only rule misses.
 
 
 def fetch_all_tags(conn, lexeme_ids):
@@ -46,13 +46,13 @@ def fetch_all_tags(conn, lexeme_ids):
     raw = []
     # Direct path: ObjectTag.objectId = Lexeme.id
     raw.extend(conn.execute(f"""
-        SELECT ot.objectId, t.value, t.parentId
+        SELECT ot.objectId, t.id, t.value, t.parentId
         FROM ObjectTag ot JOIN Tag t ON t.id = ot.tagId
         WHERE ot.objectType = 2 AND ot.objectId IN ({placeholders})
     """, lexeme_ids).fetchall())
     # Entry path: Lexeme → EntryLexeme → TreeEntry → MeaningTree → ObjectTag(objectType=3)
     raw.extend(conn.execute(f"""
-        SELECT el.lexemeId, t.value, t.parentId
+        SELECT el.lexemeId, t.id, t.value, t.parentId
         FROM EntryLexeme el
         JOIN TreeEntry te ON te.entryId = el.entryId
         JOIN MeaningTree m ON m.tree_id = te.treeId
@@ -62,14 +62,11 @@ def fetch_all_tags(conn, lexeme_ids):
     """, lexeme_ids).fetchall())
 
     buckets = {}
-    for lid, value, parent_id in raw:
+    for lid, tag_id, value, parent_id in raw:
         entry = buckets.setdefault(int(lid), {'register': set(), 'domain': set(), 'etymology': set()})
-        if parent_id in (_REGISTER_PARENT, _REGION_PARENT):
-            entry['register'].add(value)
-        elif parent_id == _DOMAIN_PARENT:
-            entry['domain'].add(value)
-        elif parent_id == _ETYMOLOGY_PARENT:
-            entry['etymology'].add(value)
+        family = tag_family(tag_id, parent_id)
+        if family:
+            entry[family].add(value)
 
     return {
         lid: {cat: '; '.join(sorted(vals)) for cat, vals in cats.items()}

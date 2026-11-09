@@ -58,8 +58,10 @@ and `getRejected()`. No UI was added.
 5. Set the cursor to `server_seq`. The server sets it to the last row it delivered.
 6. Schedule the next request (200 ms) if this one made progress and more is queued, or if
    `has_more` and rows or the cursor moved. No progress means no reschedule.
-7. Transient failure (offline, HTTP 429/5xx, malformed JSON, bad reply): keep everything.
-   The next edit, page load or `visibilitychange` retries. There is no automatic backoff loop.
+7. Transient failure (offline, any non-2xx status, malformed JSON, bad reply): keep everything.
+   If words are still queued (not `rejected`), retry after 5 s, 10 s, 20 s, … up to 5 min, with up
+   to 20% jitter. A successful reply resets the delay. An edit, page load or `visibilitychange`
+   still retries sooner. A failed pull with nothing queued does not retry; the next load pulls.
 
 ## Compatibility during deploy
 

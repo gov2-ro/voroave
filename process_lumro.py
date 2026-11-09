@@ -59,8 +59,16 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from constants import model_types_sql
+
 LEXEMES_DB  = Path('data/processed/lexemes.db')
 FREQ_DB     = Path('data/processed/corpus_frequencies.db')
+
+
+def use_db(db: Path) -> None:
+    """Point FREQ_DB at `db` (LUMRO keeps no checkpoint)."""
+    global FREQ_DB
+    FREQ_DB = Path(db)
 SOURCE_ZIP  = Path('data/raw/lumro.zip')
 CORPUS_NAME = 'lumro_ro'
 
@@ -98,7 +106,7 @@ def load_dex_words(lexemes_db: Path) -> set[str]:
           AND LENGTH(formNoAccent) > 2
           AND (
             (description != '' AND description IS NOT NULL)
-            OR modelType IN ('A','F','M','N','VT','VI','IL','PT','P')
+            OR modelType IN """ + model_types_sql() + """
           )
     """).fetchall()
     conn.close()
@@ -237,7 +245,10 @@ def main() -> int:
                     help='Parse and count, write nothing')
     ap.add_argument('--wipe', action='store_true',
                     help=f'Clear existing {CORPUS_NAME} rows before writing')
+    ap.add_argument('--db', type=Path, default=FREQ_DB,
+                    help='Output database (default: %(default)s)')
     args = ap.parse_args()
+    use_db(args.db)
 
     if not args.source.exists():
         print(f'Missing: {args.source}\n'

@@ -65,6 +65,7 @@ function boot(initialStorage) {
     words: () => JSON.parse(ls['otios.research'] || '{"words":{}}').words,
     since: () => (JSON.parse(ls['otios.sync'] || '{}').since),
     pendingTimers: () => timers.filter(Boolean).length,
+    timerDelays: () => timers.filter(Boolean).map((t) => t.ms),
     // Run queued timer callbacks (the timer fires once).
     async runTimers() {
       const due = timers.splice(0).filter(Boolean);
@@ -315,6 +316,52 @@ const watchdog = setTimeout(() => { console.log('  FAIL  test hung (pending prom
     await p;
     check(!!b.q().alfa && !!b.q().beta && !b.q().alfa.rejected, 'deferred / unknown stay queued, not rejected');
     check(b.calls.length === 1 && b.pendingTimers() === timersBefore, 'no progress, so no reschedule');
+  }
+
+  console.log('\n12. Transient failures retry with growing backoff; success resets it');
+  {
+    const b = boot({ 'otios.sync': JSON.stringify({ since: 4, migrated: true }) });
+    b.ctx.updateWord('alfa', { note: 'x' });
+    const delays = [];
+    for (let i = 0; i < 9; i++) {
+      await b.runTimers();                          // fire the scheduled push
+      const c = b.calls[b.calls.length - 1];
+      await respond(c, statusResp(503));
+      const d = b.timerDelays();
+      delays.push(d.length === 1 ? d[0] : NaN);
+    }
+    check(b.calls.length === 9, `every retry sends a request (${b.calls.length})`);
+    check(delays[0] >= 5000 && delays[0] <= 6000, `first retry waits about 5 s (${delays[0]})`);
+    check(delays[1] >= 10000 && delays[1] <= 12000, `second retry waits about 10 s (${delays[1]})`);
+    check(delays.slice(1).every((d, i) => d >= delays[i] || d >= 300000),
+          `delays grow until the cap (${delays.join(', ')})`);
+    check(delays.every((d) => d <= 360000), 'no delay exceeds the 5 min cap plus jitter');
+    check(Object.keys(b.q()).includes('alfa') && b.since() === 4, 'queue and cursor unchanged by failures');
+
+    await b.runTimers();
+    await respond(b.calls[b.calls.length - 1], serverReply(b.calls[b.calls.length - 1], { server_seq: 5 }));
+    check(Object.keys(b.q()).length === 0 && b.pendingTimers() === 0, 'success drains the queue and stops retrying');
+
+    b.ctx.updateWord('alfa', { note: 'y' });
+    await b.runTimers();
+    await respond(b.calls[b.calls.length - 1], statusResp(500));
+    const d = b.timerDelays();
+    check(d.length === 1 && d[0] >= 5000 && d[0] <= 6000, `after a success the backoff restarts at about 5 s (${d})`);
+  }
+  {
+    const b = boot({ 'otios.sync': JSON.stringify({ since: 4, migrated: true }) });
+    await b.runTimers();                            // load-time pull with an empty queue
+    await respond(b.calls[0], statusResp(503));
+    check(b.pendingTimers() === 0, 'a failed pull with nothing queued schedules no retry');
+  }
+  {
+    const b = boot({ 'otios.sync': JSON.stringify({ since: 4, migrated: true }) });
+    b.ctx.updateWord('alfa', { note: 'x' });
+    await b.runTimers();
+    await respond(b.calls[0], serverReply(b.calls[0], { override: { alfa: 'invalid' } }));
+    b.ctx.syncNow();
+    await respond(b.calls[1], statusResp(503));
+    check(b.pendingTimers() === 0, 'a queue of rejected words only schedules no retry');
   }
 
   console.log(failures ? `\n${failures} FAILED\n` : '\nAll checks passed\n');

@@ -1,7 +1,11 @@
 # Audit implementation handoff
 
-Status (2026-10-05): F01–F08 are fixed locally and committed; none is deployed.
-F02, F04 and F05 still need a live check after the owner deploys. F01 moved to the Sinonime project on 2026-10-06. F09 and F10 are planning deliverables for owner decision.
+Status (2026-11-09): F02–F08 are fixed locally and committed; none is deployed.
+F02–F06 need live acceptance checks after the owner deploys; each brief's `Status:` line names its check.
+F01 moved to the Sinonime project on 2026-10-06.
+F09 has its protocol and Stage 0 tooling; the owner's spot-check and the study are not run.
+F10 has its proposal and runbook; the recovery decision and the backup operations are open.
+`docs/BACKLOG.md` → "Owner decisions and operations" lists what remains.
 Each brief's `Status:` line is authoritative. Evidence was collected on 2026-10-05.
 Reproduce each finding before changing code. Live state may change after this date.
 
@@ -20,6 +24,8 @@ Historical plans describe earlier decisions; they do not override these briefs o
 | 8 | [F08 — Atomic database build](F08-atomic-build.md) | P2 | Builder and permanent ID registry |
 | Later | [F09 — Ranking evaluation](F09-evaluation.md) | Research | No production scoring changes |
 | Later | [F10 — Recovery and backups](F10-recovery.md) | P2 planning | Decide account recovery before implementation |
+| Next | [F11 — Local follow-ups](F11-local-followups.md) | P2 | Commit, Sinonime leftovers, data refresh, bonus measurement, corpus recount |
+| Next | [F12 — Server operations](F12-server-operations.md) | P1 | Needs SSH from the owner; after F11 Step 0 |
 
 F07 can start first if missing dependencies block the other acceptance checks.
 F03 and F05 must agree on the answer-bearing markup before either is merged.
@@ -57,4 +63,4 @@ Record skipped tests explicitly. Include reproduction evidence for every regress
 If deploying later, verify the affected live flow and its failure state after deployment.
 Do not change corpus panels, scoring weights, share IDs, or account identity casually.
 
-The docs reconciliation was completed with this handoff. Application fixes remain open.
+The docs reconciliation was completed with this handoff. Application fixes F02–F08 are complete locally.

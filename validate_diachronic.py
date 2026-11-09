@@ -49,6 +49,8 @@ import sqlite3
 import unicodedata
 from pathlib import Path
 
+from constants import TAG_FAMILY_BY_ID, TAG_FAMILY_BY_PARENT, tag_family
+
 LEXEMES_DB    = Path('data/processed/lexemes.db')
 FREQ_DB       = Path('data/processed/corpus_frequencies.db')
 CURATED_CSV   = Path('data/processed/forgotten_words_curated.csv')
@@ -552,24 +554,23 @@ def load_taxonomy(lexemes_db: Path) -> dict:
             JOIN MeaningTree m ON m.tree_id = te.treeId
             JOIN ObjectTag ot ON ot.objectId = m.meaning_id AND ot.objectType = 3
             JOIN Tag t ON t.id = ot.tagId
-            WHERE t.parentId IN (1, 6, 17, 41, 42) OR t.isPos = 1
-               OR t.id IN (6, 17, 239)
-        """).fetchall()
+            WHERE t.parentId IN ({parents}) OR t.isPos = 1
+               OR t.id IN ({ids})
+        """.format(parents=','.join(map(str, TAG_FAMILY_BY_PARENT)),
+                   ids=','.join(map(str, TAG_FAMILY_BY_ID)))).fetchall()
     except sqlite3.OperationalError:
         print("  [taxonomy] Tag/TreeEntry/MeaningTree tables not found — run extract_taxonomy.py to enable taxonomy columns")
         return {}
     finally:
         conn.close()
 
-    parent_to_family = {1: 'etymology', 6: 'register', 17: 'register', 41: 'domain', 42: 'register'}
-    tag_id_family   = {6: 'register', 17: 'register', 239: 'register'}
     taxonomy: dict = {}
     for word, tag_id, parent_id, is_pos, tag_value in rows:
         entry = taxonomy.setdefault(word, {'register': set(), 'domain': set(), 'etymology': set(), 'pos': set()})
         if is_pos:
             entry['pos'].add(tag_value)
         else:
-            family = parent_to_family.get(parent_id) or tag_id_family.get(tag_id)
+            family = tag_family(tag_id, parent_id)   # shared with create_curated_list
             if family:
                 entry[family].add(tag_value)
     return taxonomy

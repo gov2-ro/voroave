@@ -1,4 +1,5 @@
 // F06 — static document pages: inline scripts parse, and /despre applies preferences.
+// Part C: /metodologie and /despre fit a phone width without horizontal scroll.
 //
 // Part A reads public/*.html and needs no server. Part B drives /despre.html in Chromium
 // through the runner's isolated server (despre.html is static; no page here mints a device).
@@ -90,6 +91,23 @@ const BASE = require('./lib/target').testBase('tests/test_static_pages.js');
   });
   check(r.errors.length === 0, `storage unavailable: no uncaught error ${JSON.stringify(r.errors)}`);
   check(r.early.skin === 'govuk' && r.text > 500, `storage unavailable: readable page (${r.text} chars)`);
+
+  // ---- C. document pages do not scroll sideways on a phone ------------------------------
+  // /metodologie was 496px wide at 390px (nav row + a wide table). The page may hold a
+  // table that scrolls in its own box; the document itself must not widen.
+  for (const slug of ['metodologie', 'despre']) {
+    for (const scale of ['100', '125']) {
+      for (const w of [320, 360, 390, 480]) {
+        const ctx = await browser.newContext({ viewport: { width: w, height: 800 } });
+        const page = await ctx.newPage();
+        await page.addInitScript((sc) => { try { localStorage.setItem('otios.textscale', sc); } catch (e) {} }, scale);
+        await page.goto(BASE + '/' + slug, { waitUntil: 'load' });
+        const sw = await page.evaluate(() => document.documentElement.scrollWidth);
+        check(sw <= w, `/${slug} at ${w}px, text ${scale}%: no horizontal scroll (scrollWidth ${sw})`);
+        await ctx.close();
+      }
+    }
+  }
 
   await browser.close();
   console.log(failures ? `\n${failures} FAILED` : '\nall passed');

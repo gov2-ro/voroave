@@ -24,9 +24,19 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from constants import model_types_sql
+
 LEXEMES_DB   = Path('data/processed/lexemes.db')
 FREQ_DB      = Path('data/processed/corpus_frequencies.db')
 CHECKPOINT   = Path('data/processed/wikisource_checkpoint.json')
+
+
+def use_db(db: Path) -> None:
+    """Point FREQ_DB at `db`. A non-default DB gets its own checkpoint beside it."""
+    global FREQ_DB, CHECKPOINT
+    if Path(db) != FREQ_DB:
+        CHECKPOINT = Path(db).with_name(Path(db).stem + '.' + CHECKPOINT.name)
+    FREQ_DB = Path(db)
 CORPUS_NAME  = 'wikisource_ro'
 COMMIT_EVERY = 2000   # documents between DB commits
 
@@ -47,7 +57,7 @@ def load_dex_words(lexemes_db: Path) -> set[str]:
     c = conn.cursor()
     # Accept words that have a POS description OR a word-class modelType prefix.
     # Many canonical entries (e.g. "jurnalism", "ziar") have empty description
-    # but a valid modelType (N=noun, F=fem., A=adj., VT/VI=verb, etc.) — they
+    # but a valid modelType (N=noun, F=fem., A=adj., V/VT/VI=verb, etc.; constants.CORPUS_LOOKUP_MODEL_TYPES) — they
     # must be included or their corpus occurrences are silently discarded.
     c.execute("""
         SELECT DISTINCT lower(formNoAccent)
@@ -57,7 +67,7 @@ def load_dex_words(lexemes_db: Path) -> set[str]:
           AND LENGTH(formNoAccent) > 2
           AND (
             (description != '' AND description IS NOT NULL)
-            OR modelType IN ('A','F','M','N','VT','VI','IL','PT','P')
+            OR modelType IN """ + model_types_sql() + """
           )
     """)
     words = {normalize(r[0]) for r in c.fetchall()}
@@ -124,7 +134,9 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--test',   action='store_true', help='First 500 documents only')
     parser.add_argument('--resume', action='store_true', help='Skip already-processed docs')
+    parser.add_argument('--db', type=Path, default=FREQ_DB, help="Output database (default: %(default)s). A non-default path also gets its own checkpoint beside it, so a recount never reads or overwrites the main run's checkpoint.")
     args = parser.parse_args()
+    use_db(args.db)
 
     limit  = 500 if args.test else None
     skip   = load_checkpoint() if args.resume else 0

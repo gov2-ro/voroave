@@ -603,6 +603,9 @@ require_once __DIR__ . '/api/_lib.php';
           '<button class="joc-btn" id="flash-reveal">arată definiția</button>' +
         '</div>';
       document.getElementById('flash-reveal').onclick = function() {
+        // The reveal is this mode's verdict: it uncovers the card and the pane together.
+        roundDecided = true;
+        revealSpoilers();
         document.getElementById('flash-def').style.display = '';
         document.getElementById('flash-actions').innerHTML =
           '<button class="joc-btn secondary" id="flash-keep">' + star + ' păstrează</button>' +
@@ -613,7 +616,8 @@ require_once __DIR__ . '/api/_lib.php';
         };
         document.getElementById('flash-next').onclick = load;
       };
-      showWordDetail(cur.word);
+      // The pane carries the same definition the card hides, so it is withheld too.
+      showWordDetail(cur.word, true);
     }
 
     // ── Marks beside a grilă option ───────────────────────────────────────────

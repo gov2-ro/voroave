@@ -2,6 +2,48 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-11-09 — F11 hand-off: Sinonime leftovers, `--db` for a recount
+
+Deleted `public/data/syn.db` and `data/processed/relations.db`. Sinonime holds newer copies of both
+(`relations.db` sits at `data/relations.db` there, not at the path the backlog named), and nothing here reads them.
+Added `--db PATH` to the Wikisource, LUMRO and CulturaX processors. A non-default database gets its own
+checkpoint beside it: the main run's checkpoint is complete, so a recount with `--resume` would otherwise
+skip every document. Wrote briefs F11 (local) and F12 (server). Sent the VPS session a read-only phase 1:
+disk space first, then an inventory. The recount waits for the owner's push approval.
+
+## 2026-11-09 — Audit follow-ups: queue reconciled, seven local fixes
+
+Reconciled the execution queue against the source. Each issue was reproduced before the change.
+Each new check fails on the old code and passes now. Nothing is deployed, committed or re-extracted.
+
+- **Sync retry (F02 follow-up).** `store.js` now retries a failed push after 5 s, doubling to 5 min,
+  plus up to 20% jitter, while non-rejected words are queued. A success resets the delay.
+  `test_store_sync_race.js` §12: 8 checks fail on the old code. `docs/sync-protocol.md` rule 7 is updated.
+- **Flash cards (F03 follow-up).** `renderFlash()` loaded the pane without the spoiler flag, so the pane
+  showed the definition before „arată definiția”. The pane now stays withheld until the reveal. `test_ghici.js` §7f.
+- **Narrow screens.** `/metodologie` was 496px wide at 320–480px. Its nav now wraps below 640px.
+  A wide table, long `<code>` and the stat numbers also overflowed at 320–360px with 125% text; all are fixed.
+  `/despre` was 856px wide at 320px: an inline `max-width: 820px` on the intro GIF. `test_static_pages.js` part C.
+- **`extract_taxonomy.py`** defaults to the full dump, not the sample.
+- **`modelType='V'`** is in the corpus lookup set. The four processors share `constants.CORPUS_LOOKUP_MODEL_TYPES`.
+  Confirmed read-only first: 3,184 lemmas; `râde` and `țepeni` had only CoRoLa counts.
+- **Tuple parser.** `extract_lexemes.parse_mysql_insert` now uses the new `dump_parser.parse_rows`.
+  Measured on the full dump (read-only, old and new parsers side by side): `Lexeme` 317,695 → 317,721 rows,
+  7 column-shifted rows corrected. The same parser fed `extract_taxonomy.py`, and dropped **27 of 439 `Tag` rows**:
+  every tag value with `)`. 37,352 `ObjectTag` rows point at those tags. In the current data, 2,798 shortlist
+  words lack a tag: 1,002 an etymology (`limba slavă (veche)`, `turcism (învechit)`), 52 a domain, 36 a register value.
+  `score()` reads none of these tags.
+- **Tag families.** `create_curated_list` and `validate_diachronic` classify tags through one function,
+  `constants.tag_family()`. The curated list now also sees the root tags `rar`, `regional` and `ieșit din uz`.
+
+The last four take effect only when the extractors and processors run again; the backlog names the order.
+Docs corrected: the F08 status in `readme.md` and `docs/scripts-guide.md`, the `#tag-input` note in `AGENTS.md`,
+the F02/F03 status lines, and `docs/fixes/README.md`. Six backlog items for archived or deleted scripts are marked obsolete.
+The remaining owner work is in `docs/BACKLOG.md` → "Owner decisions and operations — 2026-11-09".
+
+Verification: `python3 tools/run_tests.py` PASS, 22/22 suites (portable and artifact-dependent), protected files
+unchanged. Playwright's Chromium was installed first (`npx playwright install chromium`); without it the runner refuses.
+
 ## 2026-11-09 — Share agent instructions
 
 Kept shared project guidance in `AGENTS.md` and replaced the duplicate `CLAUDE.md`

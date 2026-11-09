@@ -21,7 +21,7 @@ Use the full dump for production artifacts; sampled relation tables cannot estab
 
 ```bash
 python extract_lexemes.py
-python extract_taxonomy.py --sql data/dictionaries/dex-database.sql
+python extract_taxonomy.py
 python extract_inflected_forms.py
 python extract_dict_sources.py
 python extract_definitions.py
@@ -29,7 +29,8 @@ python create_curated_list.py
 ```
 
 Outputs include `lexemes.db`, `inflected_forms.db`, `dict_sources.db`, and `definitions.db` under `data/processed/`.
-Check input existence before long processing. Extractors' default dump paths can differ; inspect `--help`.
+Check input existence before long processing. Every extractor defaults to the full dump; use `--sql`/`--dump` for the sample.
+Never write a sample-dump extraction over `data/processed/`: the sample omits relation-table rows.
 
 ## Corpus panels
 
@@ -61,7 +62,6 @@ See `docs/ui-db-build.md` for the input policy, flags and ID-registry rules.
 
 Inflection aggregation is required for credible lemma judgments.
 The validator currently falls back when its map is missing; do not treat that degraded output as equivalent.
-Until F08 lands, preserve the last good artifact before rebuilding.
 `data/word_ids.tsv` is append-only. Verify no existing ID is removed, changed, or assigned to another word.
 Never run a rebuild or ID migration merely to execute tests.
 

@@ -1,6 +1,8 @@
 # F03 — Hide all answer content before grading
 
 Status: complete (local). Priority: P1.
+Follow-up 2026-11-09: the unlisted flash mode (`?mode=flash`, `?game=carduri`) now withholds the pane until
+„arată definiția” (`tests/test_ghici.js` §7f). Local only.
 
 ## Evidence and target
 

@@ -1,6 +1,8 @@
 # F02 — Preserve and acknowledge annotation edits correctly
 
 Status: complete locally (2026-10-05); live verification needs the owner's deploy. Priority: P1.
+Follow-up 2026-11-09: automatic retry with exponential backoff after a transient failure (protocol rule 7,
+`tests/test_store_sync_race.js` §12). Local only; deploy it with the F02 files.
 Protocol: [docs/sync-protocol.md](../sync-protocol.md).
 
 ## Evidence and target

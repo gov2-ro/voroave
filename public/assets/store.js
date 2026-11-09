@@ -6,8 +6,9 @@
 //
 // Writes stay local-first: every change lands in localStorage immediately so the UI
 // is instant and keeps working offline, then the touched words are queued and pushed
-// to the server. A failed push stays queued and retries on the next change or page
-// load, so a server outage costs nothing but freshness.
+// to the server. A failed push stays queued and retries with exponential backoff
+// (and on the next change, page load or tab hide), so a server outage costs nothing
+// but freshness.
 
 var STORE_KEY = 'otios.research';   // { version, words: { word: {bookmarked, note, tags, updated_at} } }
 var QUEUE_KEY = 'otios.pending';    // { word: { rev, ts, rejected? } }  (legacy: { word: "<iso8601>" })
@@ -18,8 +19,20 @@ var REV_KEY   = 'otios.rev';        // last local revision handed out (never reu
 // (SYNC_PAGE in api/sync.php); staying lower keeps request bodies small.
 var SYNC_BATCH = 1000;
 
+// Retry after a transient failure (offline, 429/5xx, bad reply): 5s, 10s, 20s ... up to
+// 5 min, plus up to 20% jitter so clients do not return together after an outage.
+// Only while something is queued. A successful round resets the count.
+var SYNC_RETRY_BASE = 5000;
+var SYNC_RETRY_MAX  = 300000;
+
 var syncInFlight = false;
 var syncTimer    = null;
+var syncFailures = 0;
+
+function retryDelay(n) {
+  var d = Math.min(SYNC_RETRY_BASE * Math.pow(2, n - 1), SYNC_RETRY_MAX);
+  return Math.round(d * (1 + 0.2 * Math.random()));
+}
 
 function nowIso() { return new Date().toISOString(); }
 
@@ -541,6 +554,7 @@ function syncNow() {
       var moved = data.server_seq !== (s.since || 0);
       s.since = data.server_seq;
       saveSyncState(s);
+      syncFailures = 0;
 
       if (changed) {
         document.dispatchEvent(new CustomEvent('otios:synced', { detail: { changed: true } }));
@@ -552,7 +566,14 @@ function syncNow() {
       if (morePush || morePull) scheduleSync(200);
       return changed;
     })
-    .catch(function () { return false; })   // stay queued, retry on next change or load
+    .catch(function () {
+      // Stay queued. Retry with backoff; an edit, load or tab hide still retries sooner.
+      if (pendingWords(getQueue()).length) {
+        syncFailures += 1;
+        scheduleSync(retryDelay(syncFailures));
+      }
+      return false;
+    })
     .then(function (result) { syncInFlight = false; return result; });
 }
 

@@ -5,9 +5,11 @@ into lexemes.db.  Run once after extract_lexemes.py; required before validate_di
 emits taxonomy columns.
 
 Usage:
-    python extract_taxonomy.py
-    python extract_taxonomy.py --sql data/dictionaries/dex-database.sql  # full dump
-    python extract_taxonomy.py --sql data/dictionaries/dex-database-sample.sql --db data/processed/lexemes.db
+    python extract_taxonomy.py                                            # full dump
+    python extract_taxonomy.py --sql data/dictionaries/dex-database-sample.sql --db /tmp/lexemes-sample.db
+
+The default is the full dump, like every other extractor. The sampled dump omits rows of
+the relation tables, so its output must not replace data/processed/lexemes.db.
 """
 
 import argparse
@@ -134,7 +136,7 @@ def extract(sql_path, db_path):
                         conn.commit()
                 continue
 
-            table, records = parse_mysql_insert(line)
+            table, records = parse_mysql_insert(line, tables=TARGET_TABLES)
             if table not in TARGET_TABLES:
                 continue
 
@@ -201,11 +203,18 @@ def _debug_join_counts(conn):
             print(f"  {label}: query failed — {e}")
 
 
-if __name__ == '__main__':
+DEX_SQL_PATH = 'data/dictionaries/dex-database.sql'
+
+
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description='Extract DEX taxonomy tables into lexemes.db')
-    parser.add_argument('--sql', default='data/dictionaries/dex-database-sample.sql',
-                        help='Path to DEX MySQL dump')
+    parser.add_argument('--sql', default=DEX_SQL_PATH,
+                        help=f'Path to DEX MySQL dump (default: the full dump, {DEX_SQL_PATH})')
     parser.add_argument('--db', default='data/processed/lexemes.db',
                         help='Path to lexemes.db (must already exist with Lexeme table)')
-    args = parser.parse_args()
+    return parser.parse_args(argv)
+
+
+if __name__ == '__main__':
+    args = parse_args()
     extract(args.sql, args.db)

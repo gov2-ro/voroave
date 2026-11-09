@@ -142,3 +142,52 @@ def parse_tuples(body: str, max_index: int) -> Iterator[list[str | None]]:
                 i += 1
         yield fields
         i = skip_to_tuple_end(body, i)
+
+
+# MySQL string escapes (`mysqldump` writes these). `read_quoted` above maps every escape
+# to its letter (`\n` → `n`), which is enough for the leading columns its callers read.
+# A full-row copy needs the real characters.
+_MYSQL_ESCAPES = {'0': '\0', 'b': '\b', 'n': '\n', 'r': '\r', 't': '\t', 'Z': '\x1a'}
+
+
+def parse_rows(body: str) -> Iterator[list[str | None]]:
+    """Yield every field of every tuple in an INSERT body, with exact MySQL unescaping.
+
+    Quoted fields become `str`, `NULL` becomes `None`, and unquoted fields (numbers) stay
+    as their text. A `)` or `,` inside a quoted field is data, not a delimiter.
+    """
+    i, n = 0, len(body)
+    while i < n:
+        while i < n and body[i] != '(':
+            i += 1
+        if i >= n:
+            break
+        i += 1  # step over '('
+        fields: list[str | None] = []
+        while i < n and body[i] != ')':
+            if body[i] == "'":
+                i += 1
+                buf: list[str] = []
+                while i < n:
+                    c = body[i]
+                    if c == '\\' and i + 1 < n:
+                        nxt = body[i + 1]
+                        buf.append(_MYSQL_ESCAPES.get(nxt, nxt))
+                        i += 2
+                    elif c == "'":
+                        i += 1
+                        break
+                    else:
+                        buf.append(c)
+                        i += 1
+                fields.append(''.join(buf))
+            elif body.startswith('NULL', i):
+                fields.append(None)
+                i += 4
+            else:
+                value, i = read_unquoted(body, i)
+                fields.append(value)
+            if i < n and body[i] == ',':
+                i += 1
+        i += 1  # step over ')'
+        yield fields

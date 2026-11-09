@@ -27,6 +27,8 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+from constants import model_types_sql
+
 DUMP_PATH   = Path('data/dictionaries/dex-database.sql')
 LEXEMES_DB  = Path('data/processed/lexemes.db')
 FREQ_DB     = Path('data/processed/corpus_frequencies.db')
@@ -51,7 +53,7 @@ def load_dex_words(lexemes_db: Path) -> set[str]:
           AND LENGTH(formNoAccent) > 2
           AND (
             (description != '' AND description IS NOT NULL)
-            OR modelType IN ('A','F','M','N','VT','VI','IL','PT','P')
+            OR modelType IN """ + model_types_sql() + """
           )
     """).fetchall()
     conn.close()

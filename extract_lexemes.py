@@ -8,72 +8,29 @@ import re
 import sqlite3
 import csv
 
-def parse_mysql_insert(line):
-    """Parse MySQL INSERT statement and extract values."""
-    # Match: INSERT INTO `Lexeme` VALUES (...)
-    if not line.startswith('INSERT INTO'):
+from dump_parser import parse_rows, strip_line_prefix
+
+_INSERT_RE = re.compile(r'INSERT INTO `(\w+)` VALUES ')
+
+
+def parse_mysql_insert(line, tables=None):
+    """Parse one `INSERT INTO `T` VALUES (...),(...);` line into (table, rows).
+
+    Uses `dump_parser.parse_rows`, which tracks quoting and escaping. The earlier regex
+    splitter (`findall` on parentheses around `[^)]+`) dropped or column-shifted every
+    row with a `)` inside a quoted field. Each row is a list of fields: str, or None for NULL.
+
+    With `tables`, rows are parsed only for those table names; for any other table the
+    result is (name, []). That skips the large `Definition` lines cheaply.
+    """
+    m = _INSERT_RE.match(line)
+    if not m or not line.rstrip('\n').endswith(';'):
         return None, []
+    table_name = m.group(1)
+    if tables is not None and table_name not in tables:
+        return table_name, []
+    return table_name, list(parse_rows(strip_line_prefix(line, m.group(0))))
 
-    # Extract table name
-    table_match = re.match(r'INSERT INTO `(\w+)` VALUES (.+);', line)
-    if not table_match:
-        return None, []
-
-    table_name = table_match.group(1)
-    values_str = table_match.group(2)
-
-    # Parse values - this is tricky because of nested parentheses and strings
-    # We'll use a simple regex for tuple parsing
-    # Format: (val1,val2,'str',val3),(val1,val2,'str',val3),...
-
-    records = []
-    # Split by ),( to get individual records
-    tuples = re.findall(r'\(([^)]+)\)(?:,|$)', values_str)
-
-    for tuple_str in tuples:
-        # Split by comma, but respect quoted strings
-        values = []
-        current = []
-        in_quote = False
-        quote_char = None
-
-        i = 0
-        while i < len(tuple_str):
-            char = tuple_str[i]
-
-            if char in ("'", '"') and (i == 0 or tuple_str[i-1] != '\\'):
-                if not in_quote:
-                    in_quote = True
-                    quote_char = char
-                elif char == quote_char:
-                    in_quote = False
-                    quote_char = None
-
-            if char == ',' and not in_quote:
-                values.append(''.join(current).strip())
-                current = []
-            else:
-                current.append(char)
-
-            i += 1
-
-        if current:
-            values.append(''.join(current).strip())
-
-        # Clean up values (remove quotes, handle NULLs)
-        cleaned = []
-        for v in values:
-            v = v.strip()
-            if v == 'NULL':
-                cleaned.append(None)
-            elif v.startswith("'") and v.endswith("'"):
-                cleaned.append(v[1:-1].replace("\\'", "'").replace('\\\\', '\\'))
-            else:
-                cleaned.append(v)
-
-        records.append(cleaned)
-
-    return table_name, records
 
 def extract_lexemes_to_csv(input_sql, output_csv):
     """Extract Lexeme table to CSV."""
@@ -102,7 +59,7 @@ def extract_lexemes_to_csv(input_sql, output_csv):
             if line_num % 500 == 0:
                 print(f"  Processed {line_num} lines, extracted {lexeme_count} lexemes...")
 
-            table_name, records = parse_mysql_insert(line)
+            table_name, records = parse_mysql_insert(line, tables=('Lexeme',))
 
             if table_name == 'Lexeme':
                 for record in records:

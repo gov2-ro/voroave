@@ -189,7 +189,7 @@ Default-view counts change with filtering; do not copy them into undated docs.
 - `private/secret.key`: signing key; preserve it with configuration and user-data backups.
 
 Only `public/` is deployed. Keep private storage outside the web root.
-Database rebuilds currently remove the last artifact first; [F08](docs/fixes/F08-atomic-build.md) specifies atomic replacement.
+`tools/build_ui_db.py` builds a validated candidate and replaces `ui.db` atomically ([F08](docs/fixes/F08-atomic-build.md), [build notes](docs/ui-db-build.md)).
 A snapshot script exists; cron, off-machine backup, and restore readiness still need verification.
 
 ## Research and historical notes

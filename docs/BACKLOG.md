@@ -4,6 +4,7 @@ Open bugs, debt, and enhancements. Add new entries with `- [ ]` and enough conte
 
 The [audit handoff](fixes/README.md) is the current execution queue. Its briefs define acceptance.
 Checkboxes describe status; dated investigations below preserve evidence from earlier builds.
+`[x]` done · `[~]` partly done · `[→]` moved (the entry names where) · `[obsolete]` the code it describes is archived or removed.
 An old note is not a current measurement. Do not duplicate the same task in several sections.
 
 ---
@@ -69,30 +70,80 @@ An old note is not a current measurement. Do not duplicate the same task in seve
 ### Resume here — open items after the 2026-10-05 session
 
 Local tags `v0.2.0`–`v0.6.0` mark this session's work. They are not pushed (`git push --tags`).
+Reconciled 2026-11-09: the open owner and operations items moved to "Owner decisions and operations — 2026-11-09" below.
 
-- [ ] **Deploy F02–F06 and verify live.** Nothing from 2026-10-05 is deployed. Each brief's `Status:` line names its live check.
-  F01 moved to the Sinonime project. The synonym aid is no longer in `public/`: an `rsync` without `--delete` leaves
-  `sinonime.php`, `api/syn.php`, `api/_syn*.php`, `api/_partials/syn_*.php`, `assets/syn.js` and `data/syn.db` live on
-  the server. Remove them, or decide on a `/sinonime` redirect first (Sinonime `docs/BACKLOG.md`).
-  Deploy `public/api/sync.php` and `public/assets/store.js` together, server first (F02, `docs/sync-protocol.md`).
-- [ ] **Finish the F09 Stage 0 spot-check.** Tooling is ready (`docs/eval/protocol.md`, Stage 0). The owner marks 150 words locally.
-  Link: `data/eval/spotcheck_link.txt`. Marker: paste `tools/spotcheck_marker.js` into the console. Report: `tools/eval_spotcheck.py --from-appdb`.
-  Do not rerun `eval_sample.py --spotcheck`; it rewrites the marks sheet.
-- [ ] **Decide on an in-app spot-check marking mode** (for example `?spotcheck=1`) before outside helpers mark.
-  The console paste works for the owner only. The detail panel has no free-text tag box since the August quick-tags redesign.
-- [ ] **Correct the stale `#tag-input` notes in `AGENTS.md`/`CLAUDE.md`** (the "Custom tags typed into `#tag-input`" line).
-  The detail panel no longer renders a tag input. Custom tags are still stored and synced.
+- [→] **Deploy F02–F06 and verify live.** Moved to "Owner decisions and operations".
+- [→] **Finish the F09 Stage 0 spot-check.** Moved to "Owner decisions and operations".
+- [→] **Decide on an in-app spot-check marking mode.** Moved to "Owner decisions and operations".
+- [x] **Correct the stale `#tag-input` notes in `AGENTS.md`/`CLAUDE.md`.** Done 2026-11-09. `CLAUDE.md` now imports
+  `AGENTS.md`, so one note was corrected: the panel renders no tag box; the handlers and CSS are dormant.
 - [ ] **Decide whether to prune the test device from the dev `private/app.db`.** A test run on 2026-10-05 added one anonymous
   device, quiz answers and marks (see activity history, "Test isolation guard"). Back up the file before any delete.
-- [ ] **F03 follow-up: the unlisted flash mode (`/ghici?mode=flash`) shows the definition before the reveal.** Out of F03's scope.
-- [ ] **F02 follow-up: no automatic retry with backoff after a transient sync failure.** The next edit, page load or tab hide retries.
+  Dev data only; not changed on 2026-11-09.
+- [x] **F03 follow-up: the unlisted flash mode (`/ghici?mode=flash`) shows the definition before the reveal.** Fixed locally
+  2026-11-09. Reproduced: `renderFlash()` loaded the pane without the spoiler flag. The pane now stays withheld until
+  „arată definiția”. `tests/test_ghici.js` §7f fails on the old code (1 check) and passes now. Not deployed.
+- [x] **F02 follow-up: no automatic retry with backoff after a transient sync failure.** Fixed locally 2026-11-09.
+  Retry after 5 s, doubling to 5 min, plus up to 20% jitter, only while non-rejected words are queued; success resets it
+  (`docs/sync-protocol.md` rule 7). `tests/test_store_sync_race.js` §12 fails on the old code (8 checks) and passes now.
+  Not deployed; it ships with `store.js`.
 - [ ] **Delete the synonym-aid leftovers after the 2026-10-06 detach** (now in `~/devbox/sinonime`).
-  - [ ] Local, gitignored, already copied to Sinonime: `public/data/syn.db` (16 MB) and `data/processed/relations.db` (44 MB).
+  - [x] Local, gitignored, already copied to Sinonime: `public/data/syn.db` (16 MB) and `data/processed/relations.db` (44 MB).
+    Deleted 2026-11-09 after checking that Sinonime holds newer copies (`public/data/syn.db`, `data/relations.db`)
+    and that no code here reads them.
     Nothing in this repo reads them now. Keep `data/processed/scraped_synonyms_gap.csv`: it is the scraper's gap checkpoint.
-  - [ ] On the voroave.ro server: `sinonime.php`, `api/syn.php`, `api/_syn.php`, `api/_syn_check.php`,
-    `api/_partials/syn_autocomplete.php`, `syn_landing.php`, `syn_result.php`, `syn_unavailable.php`, `assets/syn.js`
-    and `data/syn.db`. An `rsync` without `--delete` leaves them live. Decide on a `/sinonime` redirect first
-    (a 301 on the page only, never on `api/`; see Sinonime `docs/BACKLOG.md`).
+    Still present on 2026-11-09. Owner decision 2026-11-09: remove them ([F11](fixes/F11-local-followups.md) Step 1).
+  - [→] On the voroave.ro server: moved to "Owner decisions and operations".
+
+### Owner decisions and operations — 2026-11-09
+
+These need the owner, server access, or a long run. No code change in this repository closes them.
+Agent briefs: [F11](fixes/F11-local-followups.md) (local: data refresh, bonus measurement, corpus recount, local
+Sinonime files) and [F12](fixes/F12-server-operations.md) (deploy, live checks, server clean-up, backups).
+The account-recovery decision, the spot-check marks, the marking interface, licences and permissions stay with the owner.
+
+- [ ] **Deploy F02–F06 and run their live acceptance checks.** Nothing since 2026-10-05 is deployed. Each brief's
+  `Status:` line names its live check. Deploy `public/api/sync.php` before `public/assets/store.js` (F02,
+  `docs/sync-protocol.md`). The 2026-11-09 local fixes ship in the same files: sync backoff (`store.js`), flash
+  spoilers (`ghici.php`), and narrow-screen layout (`metodologie.html`, `despre.html`). After the deploy, check
+  `/statistici`, a shared `/?word=zapciu` link, a sense-quiz round, `/despre` preferences, and a sync with the network off then on.
+- [ ] **Remove the old Sinonime files from the server.** Owner decision 2026-11-09: remove them; no redirect is
+  required. Brief: [F12](fixes/F12-server-operations.md) Step 3. Files: `sinonime.php`, `api/syn.php`, `api/_syn.php`,
+  `api/_syn_check.php`, `api/_partials/syn_autocomplete.php`, `syn_landing.php`, `syn_result.php`,
+  `syn_unavailable.php`, `assets/syn.js`, `data/syn.db`. An `rsync` without `--delete` leaves them live.
+- [ ] **Backups: schedule, retention, off-server copy, restore drill.** See the F10 entry above and
+  [the runbook](recovery/backup-runbook.md). Verify the cron line runs, that 14 snapshots are kept, that a copy leaves
+  the server, and restore one copy into a disposable directory. All four are UNVERIFIED; only a local synthetic
+  rehearsal passed. Also preserve `secret.key` and `config.local.php`.
+- [ ] **Account recovery: product decision.** [Identity proposal](recovery/identity-proposal.md) recommends Option A
+  (a link or recovery code). Implementation stays blocked on this decision. No identity system is built until then.
+- [ ] **F09 Stage 0: the owner marks the 150-word spot-check.** Tooling is ready (`docs/eval/protocol.md`, Stage 0).
+  Link: `data/eval/spotcheck_link.txt`. Marker: paste `tools/spotcheck_marker.js` into the console. Report:
+  `tools/eval_spotcheck.py --from-appdb`. Do not rerun `eval_sample.py --spotcheck`; it rewrites the marks sheet.
+- [ ] **F09: decide on an external marking interface** (for example `?spotcheck=1`) before outside helpers mark.
+  The console paste works for the owner only. The detail panel has no free-text tag box.
+- [ ] **Public alpha prerequisites and dictionary-source permission review.** The items are in "Public alpha
+  readiness — 2026-10-05" below: the dexonline source licence list, `/stats` report access, production
+  configuration, the "browser is the account" notice, a code licence (owner's choice), and the sample `ui.db`.
+- [ ] **Measure the ranking effect of the five-point definition bonus (`SCORE_HAS_DEF`).** Moved here from "Pipeline
+  figure follow-ups". `validate_diachronic.py` sets `has_definition` from `definitions.db`, and `make_shortlist.py`
+  adds 5 points. A merged `scrape_definitions.py` run can therefore change scores and seams. Measure the seam and
+  rank changes with and without the bonus, then decide if it stays. No scoring weight was changed on 2026-11-09.
+  The pipeline figure's badge says a definition adds points; update the badge if the rule changes.
+- [ ] **Re-extract the taxonomy and rebuild (operational; changes UI filters, not scores).** The old tuple parser
+  dropped 27 of 439 `Tag` rows (every value with `)` in it, measured on the full dump 2026-11-09), so 37,352
+  `ObjectTag` rows point at tags missing from `lexemes.db`. 2,798 shortlist words (590 relevant) lose a tag: 1,002 an
+  etymology (`limba slavă (veche)`, `turcism (învechit)`, `limba greacă (veche)`), 52 a domain (`(termen) militar`,
+  `(termen) bisericesc`), 36 a register value. The parser is fixed. Run, in order: `extract_lexemes.py`,
+  `extract_taxonomy.py`, `create_curated_list.py`, `validate_diachronic.py`, `make_shortlist.py`,
+  `extract_meanings.py`, `tools/build_ui_db.py`. Then check `git diff --numstat data/word_ids.tsv` shows additions only.
+  `score()` reads none of these tags; `eligible()` reads etymology only with `--exclude-etymology`.
+- [ ] **Re-run the corpus processors to count `modelType='V'` lemmas (bulk run; owner schedules).** The lookup set
+  now includes `'V'`: 3,184 lemmas such as `râde` (0.99) and `țepeni` had no Wikisource, LUMRO or CulturaX counts.
+  Counts change only after `process_wikisource.py`, `process_lumro.py` and `process_culturax.py` run again; the last
+  takes days. Then run the verdict, shortlist and UI steps above. Measured shortlist impact earlier: one word (`țepeni`).
+  2026-11-09: the processors take `--db` with an isolated checkpoint; the recount runs on the VPS
+  ([F11](fixes/F11-local-followups.md) Step 4). Phase 1 (disk space, inventory) was sent to `vps-sonnet`.
 
 ### Public alpha readiness — 2026-10-05
 
@@ -136,10 +187,7 @@ Then run a final test round, launch a public alpha, and ask for contributions.
 
 ### Pipeline figure follow-ups — 2026-11-06
 
-- [ ] **Scraped definitions affect the score.** `validate_diachronic.py` sets `has_definition` from `definitions.db`.
-  `make_shortlist.py` then adds `SCORE_HAS_DEF` (5 points). A merged `scrape_definitions.py` run can therefore change
-  the score and the seam at the next verdict and shortlist run. The effect is not measured. Measure it, then decide
-  if the points stay. The figure badge says that a definition adds points; update the badge if the rule changes.
+- [→] **Scraped definitions affect the score.** Moved to "Owner decisions and operations" (measure the five-point bonus).
 - [ ] **Check the figure's location in the methodology docs.** `docs/methodology-v2.md` is an aspirational menu, and
   it holds the figure in a "The current pipeline" section. `docs/conceptual-roadmap.md` can be a better location.
 - [ ] **Decide if the readme keeps the PNG figure only.** The figure replaced the Mermaid chart in `readme.md`.
@@ -148,10 +196,16 @@ Then run a final test round, launch a public alpha, and ask for contributions.
   readable without the full-size link. Consider a portrait variant for narrow screens.
 - [ ] **The „faza 3" label sits below its row.** The lines above the row leave no room, so the label can read
   as a heading for the bottom row. The sources are in `docs/diagrams/`.
-- [ ] **`/metodologie` scrolls sideways on a phone.** At 390px the page is 496px wide, because of `.nav-links`,
+- [x] **`/metodologie` scrolls sideways on a phone.** At 390px the page is 496px wide, because of `.nav-links`,
   `.scale-stepper` and `.theme-toggle`. The overflow is the same without the figure.
-- [ ] **`extract_taxonomy.py` defaults to the sample dump.** Its `--sql` default is `dex-database-sample.sql`.
+  Fixed locally 2026-11-09. Reproduced at 320–480px (496px each). Below 640px the nav now wraps (`display: contents`
+  on `.nav-links`; two rows, 66px). Three further causes showed at 320–360px and 125% text: a wide `.data-table`
+  (now scrolls in its own box), long `<code>` identifiers (now break) and the stat numbers (now `min(2.1em, 9vw)`).
+  `/despre` had one too: an inline `max-width: 820px` on the intro GIF overrode `max-width: 100%` (856px at 320px).
+  `tests/test_static_pages.js` part C checks both pages at 320/360/390/480px × 100/125% text; 8 checks fail on the old pages.
+- [x] **`extract_taxonomy.py` defaults to the sample dump.** Its `--sql` default is `dex-database-sample.sql`.
   `docs/scripts-guide.md` passes the full dump, but the command in `CLAUDE.md` does not. Align the command or the default.
+  Fixed 2026-11-09: the default is the full dump, like the other extractors (`tests/test_pipeline_lookup.py`).
 
 ### Earlier findings
 
@@ -287,7 +341,11 @@ Then run a final test round, launch a public alpha, and ask for contributions.
     `A0000xx`-style ids map to the dump's own entry ids — probably moot, since matching by
     normalized headword is sufficient and both sources give one.
 
-- [ ] **`modelType 'V'` is missing from the corpus lookup allow-list** (găsit 260810).
+- [x] **`modelType 'V'` is missing from the corpus lookup allow-list** (găsit 260810).
+  Fixed in code 2026-11-09; counts change only after reprocessing (see "Owner decisions and operations"). Confirmed
+  first, read-only: 3,184 lemmas, and `râde`/`țepeni` had only `corola_ro` counts. The four processors now read one
+  list, `constants.CORPUS_LOOKUP_MODEL_TYPES`. `'I'` and `'SP'` stay undecided. `create_curated_list._WORD_CLASS_TYPES`
+  also lacks `'V'`; adding it changes the candidate set, so it is a separate decision.
   `load_dex_words()` — în `process_wikisource.py`, `process_culturax.py` și acum și în
   `process_lumro.py`, copiat verbatim — acceptă `modelType IN ('A','F','M','N','VT','VI',
   'IL','PT','P')`. `'V'` lipsește, deși `'VT'` și `'VI'` sunt acolo: sunt toate verbe.
@@ -357,15 +415,22 @@ Then run a final test round, launch a public alpha, and ask for contributions.
   *first-attestation dating* and dictionaries dexonline lacks (Lexiconul de la Buda 1825,
   Laurian–Massim 1871). No documented bulk export — check for one before building on it.
 
-- [ ] **`extract_lexemes.py` still uses the lossy regex splitter.** `re.findall(r'\(([^)]+)\)')`
+- [x] **`extract_lexemes.py` still uses the lossy regex splitter.** Fixed 2026-11-09: `parse_mysql_insert` now uses
+  `dump_parser.parse_rows` (new; full rows, exact MySQL unescaping; `parse_tuples` unchanged). Measured on the full
+  dump: `Lexeme` 317,695 → 317,721 rows and 7 column-shifted rows corrected (the 33 below). The same parser fed
+  `extract_taxonomy.py`, and there it was not small: 27 of 439 `Tag` rows were dropped. See "Re-extract the taxonomy"
+  under "Owner decisions and operations". The lexemes and tags change only after the extractors run again.
+  Original note: `re.findall(r'\(([^)]+)\)')`
   drops rows containing a literal `)` in a quoted field. Measured impact is small — 33 of
   317,721 rows (0.01%), *not* the 13% first estimated from the AUTOINCREMENT high-water
   mark — so this is tidiness, not urgency. `dump_parser.parse_tuples` is the drop-in
   replacement and `extract_inflected_forms.py` already writes a complete `lexeme` table
   that could replace `lexemes.db` outright.
 
-- [ ] **`create_curated_list.fetch_all_tags` misses root tags 6 (`rar`) and 239
-  (`ieșit din uz`).** It walks parents `{1,17,41,42}` while
+- [x] **`create_curated_list.fetch_all_tags` misses root tags 6 (`rar`) and 239
+  (`ieșit din uz`).** Fixed 2026-11-09: both scripts classify through `constants.tag_family()`
+  (`tests/test_pipeline_lookup.py`). The curated CSV changes at the next `create_curated_list.py` run.
+  Original note: It walks parents `{1,17,41,42}` while
   `validate_diachronic.load_taxonomy` also catches `{6,17,239}`. So `dex_register` in the
   curated CSV is strictly narrower than in the diachronic one, which weakens
   `validate_with_wordfreq.py`'s archaic-register gate — it can never see two of the four
@@ -396,7 +461,7 @@ Then run a final test round, launch a public alpha, and ask for contributions.
 
 - [ ] `dreadnought` nu e marcat ca `marină` (Mar.) in our UI but it is in dexonline web
 
-- [ ] **`rare_in_use` tier is polluted by modern loanwords + proper nouns** — the UI "rare" tab (`?word_tier=rare_in_use`) shows words that aren't rare: English borrowings (`screening`, `meeting`, `house`, `short`, `golden`, `dolby`, `wild`, `trend`, `scanner`, `cutter`), brand/variety names (`jonathan`), and proper nouns (`sioux`, `zulu`, `hagi`, `viking`). Two failing signals:
+- [obsolete] *(2026-11-09: the `rare_in_use` tab was removed on 2026-08-11; see `AGENTS.md`.)* **`rare_in_use` tier is polluted by modern loanwords + proper nouns** — the UI "rare" tab (`?word_tier=rare_in_use`) shows words that aren't rare: English borrowings (`screening`, `meeting`, `house`, `short`, `golden`, `dolby`, `wild`, `trend`, `scanner`, `cutter`), brand/variety names (`jonathan`), and proper nouns (`sioux`, `zulu`, `hagi`, `viking`). Two failing signals:
   1. **Low DEX `frequency` ≠ rare.** `create_curated_list.py:127-129` selects `0.01 < frequency < 1.0`; DEX `frequency` is editorial-coverage, not corpus frequency, so recent borrowings land in that band (`screening` 0.27, `meeting` 0.71, `house` 0.81) while still being everyday words.
   2. **Register gate too permissive** (`validate_with_wordfreq.py:151`): admits a word on `zipf < 4.5 AND dex_register non-empty` — *any* tag. Of 582 rows in `rare_words_wordfreq.csv` only ~124 are `învechit`; the rest are stylistic tags (`figurat` 172, `popular` 82, `familiar` 59, `livresc` 39) — exactly what colloquial loanwords carry. The gate was meant to require an *archaic* marker.
 
@@ -407,23 +472,23 @@ Then run a final test round, launch a public alpha, and ask for contributions.
   - **(d) Dedup by `word_no_accent`.** New `--dedup` flag (default on) collapses same-headword rows that differ only by POS (e.g. `house` as `s.n.` + `adj.`); dropped 10,133 duplicate rows on the current input.
   - **Still open:** (b) cross-lingual loanword filter and (c) cased proper-noun filter remain *deliberately* as reversible UI toggles (per the 2026-05-28 triage note) rather than permanent pipeline filters — promoting them is a product decision. Residual noise in the archaic-gated rare list is now dominated by **sense-level homograph mismatches** (`cannabis`/`listat`/`spray`/`court`/`hagi` carry an `învechit` tag on a different sense than the modern one); these are caught today by the UI's `hide_loanwords` (en_zipf) and `hide_proper` toggles. Takes effect on next `validate_with_wordfreq.py` run.
 
-- [ ] **P0 — Phase 2 candidate-set mismatch** (`process_corpus.py:56-67,187,292` vs `validate_forgotten_words.py:64-70`): `process_corpus.py` only counts tokens in `forgotten_words_curated.csv` (~1.9k words), but the validator queries `lexemes.db` with `frequency > 0.01 AND frequency < 0.60 AND LENGTH(form) > 3` (tens of thousands of lexemes). Words absent from the curated CSV silently get `total_occurrences = 0` and are classified as `confirmed_forgotten` with confidence ~0.99. The "159,543 validated, 1 false positive" headline in `docs/phase2-test-results.md` is an artefact. Fix: align the candidate source, or have `process_corpus.py` count every token.
+- [obsolete] *(2026-11-09: both scripts are in `archive/`; the current path is `validate_diachronic.py`.)* **P0 — Phase 2 candidate-set mismatch** (`process_corpus.py:56-67,187,292` vs `validate_forgotten_words.py:64-70`): `process_corpus.py` only counts tokens in `forgotten_words_curated.csv` (~1.9k words), but the validator queries `lexemes.db` with `frequency > 0.01 AND frequency < 0.60 AND LENGTH(form) > 3` (tens of thousands of lexemes). Words absent from the curated CSV silently get `total_occurrences = 0` and are classified as `confirmed_forgotten` with confidence ~0.99. The "159,543 validated, 1 false positive" headline in `docs/phase2-test-results.md` is an artefact. Fix: align the candidate source, or have `process_corpus.py` count every token.
 
 - [x] **Three competing MySQL→SQLite paths** — Fixed. `extract_lexemes.py` is the sole canonical path; `convert_to_sqlite.sh` + `mysql_to_sqlite.py` moved to `archive/` (with `archive/README.md` explaining why). Note: `docs/scripts-guide.md` still documents `mysql_to_sqlite.py` as an "alternative approach" — left for a separate docs pass.
 
-- [ ] **`explore_dex.py` is dead code** — imports `sqlite3` but never uses it; `__main__` points `db_path` at a `.sql` file that `sqlite3.connect()` cannot open. Content is narrative; move to `docs/` or delete.
+- [obsolete] *(2026-11-09: deleted in `1cb8ff8`.)* **`explore_dex.py` is dead code** — imports `sqlite3` but never uses it; `__main__` points `db_path` at a `.sql` file that `sqlite3.connect()` cannot open. Content is narrative; move to `docs/` or delete.
 
 - [x] **Frequency-bin definitions disagree across scripts** — Fixed. Added `constants.py` as the single source of truth: `MIN_FREQUENCY`, `MIN_FORM_LENGTH`, the canonical rarity-bin edges (`VERY_RARE_MAX`/`RARE_MAX`/`UNCOMMON_MAX`) + a `rarity_category()` helper, plus the per-stage candidate ceilings (`CURATED_FREQ_CEILING`, and the clearly-marked legacy `ANALYZE_FREQ_THRESHOLD`/`VALIDATION_FREQ_CEILING`). `create_curated_list.py` now bins via `rarity_category()` (removed two duplicated inline binning blocks); `analyze_forgotten_words.py` and `validate_forgotten_words.py` import their floors/ceilings. Boundary-tested: new binning matches the old logic exactly at every edge. Legacy display histogram bins in `analyze_forgotten_words.py` are coupled to its 0.70 candidate threshold and left script-local (documented as intentional in `constants.py`).
 
 - [x] **Regex probable typo in `create_curated_list.py:28-32`** — Fixed: removed trailing apostrophe from `r"^[a-z]+-[a-z]+'"` so the hyphenation filter now actually fires. Was dead code (matched 0 words in the shortlist).
 
-- [ ] **OSCAR auth fails silently** (`process_corpus.py:255-261`) — when `--full` is requested but the dataset is unreachable, the run silently skips OSCAR. Should fail loudly or warn clearly.
+- [obsolete] *(2026-11-09: `process_corpus.py` is in `archive/`.)* **OSCAR auth fails silently** (`process_corpus.py:255-261`) — when `--full` is requested but the dataset is unreachable, the run silently skips OSCAR. Should fail loudly or warn clearly.
 
-- [ ] **`download_wikipedia_ro.py` blocks on interactive `y/N`** — not scriptable without a `--yes` flag.
+- [obsolete] *(2026-11-09: the script is in `archive/`.)* **`download_wikipedia_ro.py` blocks on interactive `y/N`** — not scriptable without a `--yes` flag.
 
 - [ ] **No CLI path overrides** — all scripts hardcode `data/dictionaries/` and `data/processed/`; `process_corpus.py` has `argparse` for mode only, not paths.
 
-- [ ] **Confidence-score weights are unjustified** (`validate_forgotten_words.py:215`) — `dex×0.3 + corpus×0.5 + doc×0.2` was chosen ad hoc. Treat output as ordinal, not absolute.
+- [obsolete] *(2026-11-09: the validator is in `archive/`; ranking evaluation is F09.)* **Confidence-score weights are unjustified** (`validate_forgotten_words.py:215`) — `dex×0.3 + corpus×0.5 + doc×0.2` was chosen ad hoc. Treat output as ordinal, not absolute.
 
 - [x] **`load_taxonomy()` join is wrong — domain/register/etymology columns are noise** — Fixed. `extract_taxonomy.py` now extracts `TreeEntry(id, treeId, entryId)` and `MeaningTree(meaning_id, tree_id)` into `lexemes.db`. Both `load_taxonomy()` in `validate_diachronic.py` and `fetch_all_tags()` in `create_curated_list.py` use the corrected join chain `Lexeme → EntryLexeme → TreeEntry → MeaningTree → ObjectTag(objectType=3)`. Verified: `pretutindeni` now has no tags (correct), `antipapă` → français etymology (correct), `isihie` → `învechit` register + neogreacă etymology (correct). **Re-run `validate_diachronic.py` to regenerate the shortlist CSV with accurate taxonomy columns.**
 

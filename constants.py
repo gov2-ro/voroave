@@ -66,3 +66,33 @@ ANALYZE_FREQ_THRESHOLD = 0.70
 
 # validate_forgotten_words.py: candidate band ceiling.
 VALIDATION_FREQ_CEILING = 0.60
+
+
+# --- Corpus lookup set (process_wikisource/_culturax/_lumro/_subtitles) --------
+#
+# A lexeme with an empty `description` is still counted when its `modelType` names a
+# word class. 'V' (verb) was missing while 'VT' and 'VI' were present: 3,184 lemmas
+# such as `râde` (0.99) got no corpus counts. Adding a type changes the counts only
+# after the corpora are processed again. 'I' (invariable) and 'SP' are undecided.
+CORPUS_LOOKUP_MODEL_TYPES = ('A', 'F', 'M', 'N', 'V', 'VT', 'VI', 'IL', 'PT', 'P')
+
+
+def model_types_sql(types=CORPUS_LOOKUP_MODEL_TYPES):
+    """Return the types as an SQL list literal, e.g. "('A','F')". The values are constants."""
+    return '(' + ','.join(f"'{t}'" for t in types) + ')'
+
+
+# --- DEX taxonomy families (create_curated_list.py, validate_diachronic.py) ---
+#
+# A Tag belongs to a family by its parent, or, for three root tags that DEX applies
+# directly to meanings, by its own id. Both scripts must classify tags the same way.
+TAG_FAMILY_BY_PARENT = {1: 'etymology', 6: 'register', 17: 'register',
+                        41: 'domain', 42: 'register'}
+TAG_FAMILY_BY_ID = {6: 'register',     # rar
+                    17: 'register',    # regional (its children are regions)
+                    239: 'register'}   # ieșit din uz
+
+
+def tag_family(tag_id, parent_id):
+    """Return 'register' / 'domain' / 'etymology', or None for a tag outside them."""
+    return TAG_FAMILY_BY_PARENT.get(parent_id) or TAG_FAMILY_BY_ID.get(tag_id)

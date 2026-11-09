@@ -389,6 +389,32 @@ function open(path) {
     d.window.close();
   }
 
+  console.log('\n7f. Flash cards (?mode=flash) withhold the pane until the reveal');
+  {
+    const d = await open('/ghici?mode=flash');
+    const w = d.window, q = s => w.document.querySelector(s);
+    w.__detailHook = async () => ({ word: 'abraș' });
+    check(await waitFor(() => q('#flash-reveal')), 'a flash card renders');
+    q('#flash-reveal').click();                      // first card: may predate the hook
+    await waitFor(() => q('#flash-next'));
+    q('#flash-next').click();
+    check(await waitFor(() => q('#flash-reveal') && q('#panel-pane .fp-title')
+                              && q('#panel-pane .fp-title').textContent.trim() === 'abraș'),
+      'the next card loads its pane');
+    const pane = q('#panel-pane');
+    const firstText = ((pane.querySelector('.sense-text, .definition-text') || {}).textContent || '').trim();
+    const body = pane.querySelector('.fp-body');
+    check(firstText.length > 5 && body.hidden && body.hasAttribute('inert')
+          && !visibleText(pane).includes(firstText.slice(0, 25)),
+      'the pane definition is not visible before the reveal');
+    check(q('#flash-def').style.display === 'none', 'the card definition is not visible before the reveal');
+    q('#flash-reveal').click();
+    check(!body.hidden && !body.hasAttribute('inert') && visibleText(pane).includes(firstText.slice(0, 25)),
+      'the reveal shows the pane definition');
+    check(q('#flash-def').style.display === '', 'the reveal shows the card definition');
+    d.window.close();
+  }
+
   console.log('\n8. No script errors along the way');
   // Stylesheet fetches are jsdom's own limitation, not the page's.
   const real = errors.filter(e => !/Could not load|css|stylesheet/i.test(e));

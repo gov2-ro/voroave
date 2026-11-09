@@ -1645,8 +1645,10 @@ reason someone will otherwise remove:
   the previous word when the row is being removed and stay put when it is not; never wrap to
   the top, which silently restarts the list.
 
-Custom tags typed into `#tag-input` deliberately do not advance — it would pull focus out of
-the field mid-typing.
+The detail panel renders no free-text tag box (`#tag-input`) since the August quick-tags
+redesign. Its handlers in `store.js`/`app.js` and its CSS are dormant, kept in case the box
+returns; if it does, typed tags must not advance, because that would pull focus out of the field.
+Custom tags created before the redesign still display as chips and still sync.
 
 ### Moderation
 

@@ -581,12 +581,23 @@
     @media (max-width: 640px) {
       .hero h1      { font-size: 1.9em; }
       .hero         { padding: 36px 20px 32px; }
-      .stat-row     { grid-template-columns: 1fr 1fr; gap: 20px 0; }
+      .stat-row     { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 0; }
       .stat-it:nth-child(2) { border-right: none; }
       .stat-it:nth-child(3) { padding-left: 0; }
+      .stat-num     { font-size: min(2.1em, 9vw); }   /* „140.308" fits half of 320px at 125% */
       .toc ol       { grid-template-columns: 1fr; }
       .article      { padding: 36px 20px 72px; }
-      .site-nav     { padding: 0 16px; }
+      /* The nav needs ~470px in one row. Below this width it wraps, and the page does
+         not widen. `display: contents` makes the links and controls items of the nav
+         itself, so they fill the brand's row before they start a new one. */
+      .site-nav     { padding: 6px 16px; height: auto; min-height: 44px; flex-wrap: wrap;
+                      justify-content: flex-start; gap: 6px 14px; }
+      .nav-links    { display: contents; }
+      .article section { scroll-margin-top: 84px; }
+      /* Long identifiers (`SkipExamplesIterable._iter_arr`) may break mid-word. */
+      .article code { overflow-wrap: anywhere; }
+      /* A wide table scrolls inside its own box, not the page. */
+      .data-table   { display: block; max-width: 100%; overflow-x: auto; }
     }
   </style>
 </head>
