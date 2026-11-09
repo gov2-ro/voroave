@@ -2,6 +2,15 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-11-10 — Three backlog bugs checked: two closed, one diagnosed
+
+- `.fp-dicts` below the panel fold: not a bug. `.fp-body` scrolls, and after scrolling the dexonline link is
+  clickable at four viewport sizes on two words (Playwright, staged copy of `public/` with a scratch private dir).
+- `dreadnought` without `marină`: DEX attaches no domain tag; „Mar." exists only in dexonline's rendered text.
+- Missing definitions: 808 words have none, 2 in `relevant`. 722 were never scraped (the scraper last ran
+  2026-08-17); 85 are `not_found`, 1 errored. `scrape_definitions.py --dry-run` queues 1,042. The scrape is left
+  to the owner; it can no longer move seams.
+
 ## 2026-11-10 — wROdfreq links; figure PNGs quantized
 
 Linked wROdfreq (<https://github.com/gov2-ro/wrodfreq>) from `readme.md`, `/metodologie` (with one sentence on what

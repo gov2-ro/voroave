@@ -248,8 +248,13 @@ Then run a final test round, launch a public alpha, and ask for contributions.
 
 ### Earlier findings
 
-- [ ] **`.fp-dicts` (the "în N dicționare" row) can sit below `.fp-body`'s scrollable
-  fold, out of reach without scrolling first.** Found 2026-08-18 while reproducing the
+- [x] **`.fp-dicts` (the "în N dicționare" row) can sit below `.fp-body`'s scrollable
+  fold, out of reach without scrolling first.** *Closed 2026-11-10 — not a bug.* Measured with Playwright
+  at 1366×768, 1024×700, 390×844 and 360×640 on `abraș` and `zapciu`: `.fp-body` is the scroller
+  (`overflow-y: auto`), and after scrolling it the dexonline link receives the click (`elementFromPoint`)
+  in all 8 cases. The row is below the fold on open for almost every word, which is ordinary for the end of
+  a scroll box. The click failure below came from a test clicking the row's layout position without scrolling.
+  Original note: Found 2026-08-18 while reproducing the
   `.dict-tooltip` off-canvas bug (fixed the same day — see `docs/activity-history.md`).
   `.fp-body` has a fixed clip height (44vh on desktop, 60vh on a phone); `.fp-dicts`
   renders last, after the sense tree, synonyms and tags, so a long multi-sense entry can
@@ -479,6 +484,14 @@ Then run a final test round, launch a public alpha, and ask for contributions.
 - [ ] check why some words are still missing definitions even if found on dexonline. did scraping fail?
   Scale as of 2026-08-08's `ui.db`: **746 of 16,315 words have no definition, 33 of them
   in the `relevant` seam.** Small enough to diagnose case by case rather than guess.
+  **Diagnosed 2026-11-10 (read-only, current `ui.db`):** 808 of 18,270 words have neither a definition nor senses,
+  2 in `relevant` (`brodărie`, `bulucbașa`). The scraper did not fail: 722 were never scraped (331 plain, 295 variants
+  or old spellings, 96 inflected forms of another lemma), because `scrape_definitions.py` has not run since
+  2026-08-17. Only 85 got `not_found` from dexonline (e.g. `hiriș`, `luced`, `dudue`) and 1 an error (`semilemnos`).
+  `scrape_definitions.py --dry-run` queues 1,042 words now (≈ 52 min at 3 s). Next step (owner): run
+  `scrape_definitions.py --delay 3.0 --merge` after the rebuild. Since 2026-11-10 a definition adds no points,
+  so the scrape cannot move words between seams. Then check the `not_found` words by hand: several are inflected
+  forms (`cujbit`, `înoit`) whose dexonline page belongs to the lemma.
 
 - [x] **`scrape_definitions.py` has no host lock.** — **Fixed 260810.** `acquire_host_lock()`
   + the `LockHeld` branch copied in, guarded on `not args.dry_run` (and `--merge-only` already
@@ -498,7 +511,11 @@ Then run a final test round, launch a public alpha, and ask for contributions.
   at once reproduces the bug across scripts. If a third caller appears, that is the point
   to lift the helper into a shared module rather than copy it a third time.
 
-- [ ] `dreadnought` nu e marcat ca `marină` (Mar.) in our UI but it is in dexonline web
+- [x] `dreadnought` nu e marcat ca `marină` (Mar.) in our UI but it is in dexonline web
+  *Closed 2026-11-10 — not a pipeline bug.* In the dump, `dreadnought` (lexeme 17806) carries only lexeme tags
+  (`substantiv neutru`, `(numai) singular`) and etymology tags on its meaning; no `ObjectTag` attaches the domain
+  tag `marină` (id 103). The „Mar." on dexonline's page is an abbreviation inside the DEX definition text, which our
+  stored definition does not contain. Reading domains out of definition abbreviations would be a new feature.
 
 - [obsolete] *(2026-11-09: the `rare_in_use` tab was removed on 2026-08-11; see `AGENTS.md`.)* **`rare_in_use` tier is polluted by modern loanwords + proper nouns** — the UI "rare" tab (`?word_tier=rare_in_use`) shows words that aren't rare: English borrowings (`screening`, `meeting`, `house`, `short`, `golden`, `dolby`, `wild`, `trend`, `scanner`, `cutter`), brand/variety names (`jonathan`), and proper nouns (`sioux`, `zulu`, `hagi`, `viking`). Two failing signals:
   1. **Low DEX `frequency` ≠ rare.** `create_curated_list.py:127-129` selects `0.01 < frequency < 1.0`; DEX `frequency` is editorial-coverage, not corpus frequency, so recent borrowings land in that band (`screening` 0.27, `meeting` 0.71, `house` 0.81) while still being everyday words.
