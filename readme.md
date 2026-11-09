@@ -200,6 +200,7 @@ A snapshot script exists; cron, off-machine backup, and restore readiness still 
 - [Publication assessment](docs/publication-assessment.md): dated assessment, not an implemented evaluation
 - [F09 evaluation brief](docs/fixes/F09-evaluation.md): next bounded research deliverable
 - [Archived wordfreq recipe](docs/archive-obsolete/wordfreq-recipe.md)
+- [wROdfreq](https://github.com/gov2-ro/wrodfreq): a Romanian word-frequency table built from this project's tokenizer and DEX paradigm map. `validate_with_wrodfreq.py` reads it as a standalone screen; it does not feed the ranking.
 - [Archived script guide](docs/archive-obsolete/scripts-guide.md)
 
 Current priorities are reliability and independent evaluation before feature expansion.

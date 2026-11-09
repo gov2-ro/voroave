@@ -2,6 +2,15 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-11-10 — wROdfreq links; figure PNGs quantized
+
+Linked wROdfreq (<https://github.com/gov2-ro/wrodfreq>) from `readme.md`, `/metodologie` (with one sentence on what
+it is) and the `/despre` footer, as the cross-project request in the backlog asked. Static-page tests still pass
+(no horizontal scroll at 320–480px). The wROdfreq session's backlog section ("Cross-project requests — 2026-11-10")
+was swept into commit `1db0320` by `git add -A`, under the definition-bonus message; it was already pushed, so the
+history was left as it is. The re-rendered figure PNGs (RGB, ~580 KB) were quantized with `pngquant` back to indexed
+colour (~200 KB, the size of the originals); no channel moves by more than 23/255.
+
 ## 2026-11-10 — Definition bonus removed; relevant threshold 87
 
 Owner decision, from `docs/eval/definition-bonus.md`: `SCORE_HAS_DEF` 5 → 0 and `RELEVANT_MIN_SCORE` 92 → 87.

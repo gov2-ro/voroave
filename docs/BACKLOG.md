@@ -160,7 +160,9 @@ The account-recovery decision, the spot-check marks, the marking interface, lice
 
 ### Cross-project requests — 2026-11-10
 
-- [ ] **Link to wROdfreq from the README and the website.** Requested by the owner on
+- [x] **Link to wROdfreq from the README and the website.** Done locally 2026-11-10 in all three places
+  (`readme.md` research list, `/metodologie` §verificări, `/despre` footer „proiect înrudit"); deploys with the next batch.
+  Requested by the owner on
   2026-11-10, from the wROdfreq project. wROdfreq is the Romanian word-frequency table
   built from oțios's tokenizer and DEX paradigm map (`~/devbox/gov2/wrodfreq`,
   <https://github.com/gov2-ro/wrodfreq>). Version 0.2.1 is tagged on GitHub (`v0.2.1`); the
