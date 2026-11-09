@@ -149,6 +149,11 @@ The account-recovery decision, the spot-check marks, the marking interface, lice
   takes days. Then run the verdict, shortlist and UI steps above. Measured shortlist impact earlier: one word (`țepeni`).
   2026-11-09: the processors take `--db` with an isolated checkpoint; the recount runs on the VPS
   ([F11](fixes/F11-local-followups.md) Step 4). Phase 1 (disk space, inventory) was sent to `vps-sonnet`.
+  Status 2026-11-09 evening: Wikisource and LUMRO recounted on the Mac (`corpus_frequencies.v2.db`; tokens identical).
+  CulturaX v2 runs on the VPS (`voroave-vps`, PID 3655359, `data/logs/culturax_v2.log`). It started at document 0 with
+  144,459 lookup forms and runs at about 820 docs/s; ETA about 13.7 h (2026-11-10, around 11:00 VPS time) if there
+  are no network restarts. Next: VPS Phase 3 (compare totals), copy its v2 to the Mac, merge `culturax_ro` into the
+  Mac v2, then F11 Step 2 again from `validate_diachronic.py` and `build_ui_db.py`.
 
 ### Public alpha readiness — 2026-10-05
 
