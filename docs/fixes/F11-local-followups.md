@@ -2,7 +2,8 @@
 
 Status: in progress 2026-11-09. Priority: P2. Needs no server access.
 Done: Step 0 (commits; tag `v0.9.0`), Step 1 (local Sinonime files deleted), Step 4.1 (`--db` with its own checkpoint),
-Step 3 ([measurement](../eval/definition-bonus.md)). Step 2 ran up to `extract_meanings.py` and stopped before
+Step 3 ([measurement](../eval/definition-bonus.md)). Step 4: Wikisource and LUMRO recounted on the Mac into
+`data/processed/corpus_frequencies.v2.db`; CulturaX runs on the VPS ([F11-vps-recount](F11-vps-recount.md)). Step 2 ran up to `extract_meanings.py` and stopped before
 `build_ui_db.py` on purpose (see "Step 2 result"). Backup: `data/backup-2026-11-09/`.
 Step 4.2–4.5 run on the VPS (session `vps-sonnet`; phase 1 is a read-only disk and inventory check).
 

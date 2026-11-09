@@ -2,6 +2,16 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-11-09 — F11 Step 4: Wikisource and LUMRO recounted; CulturaX handed to the VPS
+
+Recounted Wikisource and LUMRO on the Mac into `corpus_frequencies.v2.db`, with the `V` lemmas and the refreshed
+`lexemes.db`. The live DB is untouched (backup `corpus_frequencies.bak-2026-11-09.db`). Documents and tokens equal the
+old run exactly (12,921 / 14,297,033; 175 / 5,072,239). Words attested: Wikisource 45,218 → 46,356, LUMRO 25,930 → 26,646.
+Earlier counts are unchanged (`zapciu`, `politeță`). New: `râde` 894/501 in Wikisource, `electricitate` 40/34.
+The VPS (`voroave-vps`, phase 1 report) has no dump and no `lumro.zip`, and holds only `culturax_ro`; CulturaX streams,
+so 3.2 GB free is enough. It recounts CulturaX into its own v2 once the owner copies the refreshed `lexemes.db`
+(lookup set 144,443 → 144,459). `docs/fixes/F11-vps-recount.md` was revised for this split.
+
 ## 2026-11-09 — F11: data refresh up to the shortlist; definition bonus measured
 
 Backed up the outputs to `data/backup-2026-11-09/`, then ran `extract_lexemes` through `extract_meanings` on the full dump.
