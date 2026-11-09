@@ -2,6 +2,13 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-11-09 — Share agent instructions
+
+Kept shared project guidance in `AGENTS.md` and replaced the duplicate `CLAUDE.md`
+with an import of that file. The two files previously differed only in their title
+and introductory agent name; there were no agent-specific directives to preserve.
+Future Claude-specific directives belong in `CLAUDE.md`.
+
 ## 2026-11-06 — Pipeline figure
 
 Added a hand-drawn figure of the data pipeline, in Romanian and English (sources in `docs/diagrams/`).

@@ -79,7 +79,7 @@ Dexonline is a community dictionary collection, not a single official dictionary
 Start with [scripts and setup](docs/scripts-guide.md).
 For delegated fixes, use [the audit handoff](docs/fixes/README.md).
 Task status lives in [BACKLOG.md](docs/BACKLOG.md); [activity history](docs/activity-history.md) records completed work.
-Read [AGENTS.md](AGENTS.md) before changes. CLAUDE.md carries the same project guidance.
+Read [AGENTS.md](AGENTS.md) before changes. [CLAUDE.md](CLAUDE.md) imports it for Claude.
 
 ## Architecture
 

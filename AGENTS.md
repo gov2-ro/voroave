@@ -1,6 +1,8 @@
 # AGENTS.md
 
-Guidance for Codex (and humans) working in this repository.
+Shared guidance for coding agents (and humans) working in this repository.
+Keep shared project instructions here; `CLAUDE.md` imports this file and is reserved
+for any additional Claude-specific directives.
 
 ## Current documentation and audit handoff
 
