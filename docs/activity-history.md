@@ -2,6 +2,20 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-11-10 — Search Tab order fixed; stale backlog items closed
+
+- Fixed: after a search, Tab went through the shortcuts link, the filter button and the sheet before reaching a word.
+  With a query in the box, Tab now lands on the selected (or first) word and Shift+Tab from a word returns to the box.
+  An empty box keeps the normal order. New browser suite `tests/test_search_tab.js` (1366px and 390px); it fails on
+  the old `app.js` and passes now.
+- Verified and closed: `zăticni` sense 1 renders (synonym fallback); quiz shows the definition on a wrong answer (F03).
+- Marked obsolete: `Maramureș`/`biodiversitate` and `psihoanaliză` (no longer in `ui.db`), three Flask-UI items
+  (`ui/` is archived), and the note-textarea Enter key (the panel has no note box).
+- Left open: the figure's „faza 3" label needs a layout decision (`diagram-designer` agent).
+- Fixed a flaky test: `tests/test_ghici.js` closed a jsdom window while a quiz request was still resolving, so a late
+  `renderScore()` threw outside the page and ended the process (1 of 4 runs). Windows now close only when no request
+  is in flight. Full strict run before that fix: 22/23 (only this suite failed); after it, the suite passed 3 of 3 runs.
+
 ## 2026-11-10 — Three backlog bugs checked: two closed, one diagnosed
 
 - `.fp-dicts` below the panel fold: not a bug. `.fp-body` scrolls, and after scrolling the dexonline link is

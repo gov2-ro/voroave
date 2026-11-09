@@ -953,6 +953,28 @@ document.addEventListener('focusin', function(e) {
   if (sel) sel.focus({ preventScroll: true });
 });
 
+// After a search, the results are the next thing a reader wants, but in DOM order the
+// header's shortcuts link, the filter button and the sheet's controls come first.
+// So, while the box holds a query: Tab from it lands on the selected word (or the
+// first), and Shift+Tab from a word goes back to the box. With an empty box, or before
+// any result has arrived, Tab keeps its normal order.
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Tab' || e.metaKey || e.ctrlKey || e.altKey) return;
+  const input = document.getElementById('search');
+  if (!input || input.value.trim() === '') return;
+  if (!e.shiftKey && e.target === input) {
+    const all = rows();
+    if (!all.length) return;
+    e.preventDefault();
+    selectRow(selectedIdx < 0 ? 0 : selectedIdx, true);
+    const sel = all[selectedIdx];
+    if (sel) sel.focus({ preventScroll: true });
+  } else if (e.shiftKey && e.target.closest && e.target.closest('.word-row')) {
+    e.preventDefault();
+    input.focus();
+  }
+});
+
 // Shortcuts overlay dismiss
 document.addEventListener('click', function(e) {
   const overlay = document.getElementById('shortcuts-overlay');

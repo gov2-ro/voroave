@@ -51,7 +51,15 @@ async function waitFor(fn, ms = 8000) {
 // current_user() to build the per-player pool).
 const jar = {};
 function beforeParse(window) {
+  // Requests in flight, so a test can close a window only after the page's own
+  // callbacks have run. Closing earlier let a late response call renderScore() on a
+  // torn-down document, which throws outside the page and ends the whole process.
+  window.__inflight = 0;
   window.fetch = async (url, opts = {}) => {
+    window.__inflight++;
+    try { return await realFetch(url, opts); } finally { window.__inflight--; }
+  };
+  async function realFetch(url, opts) {
     // Test hook: decide which word a detail request gets, and hold its response back.
     // The server still renders the real fragment (real detail.php markup) for it.
     if (window.__detailHook && String(url).includes('/api/word.php?word=')) {
@@ -73,7 +81,14 @@ function beforeParse(window) {
       jar[kv.slice(0, i).trim()] = kv.slice(i + 1).trim();
     });
     return { ok: res.ok, status: res.status, text: () => res.text(), json: () => res.json() };
-  };
+  }
+}
+
+// Close a window once nothing is in flight, then give pending callbacks one tick.
+async function closeDom(d) {
+  await waitFor(() => !d.window.__inflight, 5000);
+  await sleep(50);
+  d.window.close();
 }
 
 const errors = [];
@@ -251,7 +266,7 @@ function open(path) {
   const dom2 = await open('/ghici?mode=quiz');
   await waitFor(() => dom2.window.document.querySelector('.joc-choice-row'));
   check(!!dom2.window.document.querySelector('.joc-choice-row'), '?mode=quiz still lands in grilă');
-  dom2.window.close();
+  await closeDom(dom2);
 
   console.log('\n7b. F03 — the answer body is withheld as one unit, per content shape');
   // Real detail.php markup for words with each shape; only the word choice is forced.
@@ -309,7 +324,7 @@ function open(path) {
       `${label}: the full body is visible after grading (${q('#quiz-feedback').className.includes('ok') ? 'right' : 'wrong'} answer)`);
     check(!pane.querySelector('.fp-pos-line') || !pane.querySelector('.fp-pos-line').hidden,
       `${label}: the POS line is back after grading`);
-    d.window.close();
+    await closeDom(d);
   }
 
   console.log('\n7c. F03 — grade before the detail response arrives');
@@ -335,7 +350,7 @@ function open(path) {
     check(!body.hidden && !body.hasAttribute('inert') && !body.hasAttribute('aria-hidden')
           && !q('#panel-pane .fp-pos-line, #panel-pane .fp-body').classList.contains('joc-spoiler'),
       'the late detail is shown in full, not re-hidden');
-    d.window.close();
+    await closeDom(d);
   }
 
   console.log('\n7d. F03 — a stale response never replaces the current question');
@@ -363,7 +378,7 @@ function open(path) {
       'the stale response for the earlier question did not replace the pane');
     check(q('#panel-pane .fp-body') && q('#panel-pane .fp-body').hidden,
       'and the current question\'s body is still withheld');
-    d.window.close();
+    await closeDom(d);
   }
 
   console.log('\n7e. F03 — grilă: a wrong answer compares a structured entry readably');
@@ -386,7 +401,7 @@ function open(path) {
       }
     }
     check(wrong, 'a wrong grilă round was reached');
-    d.window.close();
+    await closeDom(d);
   }
 
   console.log('\n7f. Flash cards (?mode=flash) withhold the pane until the reveal');
@@ -412,7 +427,7 @@ function open(path) {
     check(!body.hidden && !body.hasAttribute('inert') && visibleText(pane).includes(firstText.slice(0, 25)),
       'the reveal shows the pane definition');
     check(q('#flash-def').style.display === '', 'the reveal shows the card definition');
-    d.window.close();
+    await closeDom(d);
   }
 
   console.log('\n8. No script errors along the way');

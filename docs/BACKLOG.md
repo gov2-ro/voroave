@@ -87,7 +87,7 @@ Reconciled 2026-11-09: the open owner and operations items moved to "Owner decis
   Retry after 5 s, doubling to 5 min, plus up to 20% jitter, only while non-rejected words are queued; success resets it
   (`docs/sync-protocol.md` rule 7). `tests/test_store_sync_race.js` §12 fails on the old code (8 checks) and passes now.
   Not deployed; it ships with `store.js`.
-- [ ] **Delete the synonym-aid leftovers after the 2026-10-06 detach** (now in `~/devbox/sinonime`).
+- [x] **Delete the synonym-aid leftovers after the 2026-10-06 detach** (now in `~/devbox/sinonime`). Local part done 2026-11-09; server part moved.
   - [x] Local, gitignored, already copied to Sinonime: `public/data/syn.db` (16 MB) and `data/processed/relations.db` (44 MB).
     Deleted 2026-11-09 after checking that Sinonime holds newer copies (`public/data/syn.db`, `data/relations.db`)
     and that no code here reads them.
@@ -233,7 +233,7 @@ Then run a final test round, launch a public alpha, and ask for contributions.
   The chart was editable as text and is in git history.
 - [ ] **The figure is small on a phone.** On `/metodologie` at 390px the figure is 350px wide, and the text is not
   readable without the full-size link. Consider a portrait variant for narrow screens.
-- [ ] **The „faza 3" label sits below its row.** The lines above the row leave no room, so the label can read
+- [ ] **The „faza 3" label sits below its row.** *(2026-11-10: left for the `diagram-designer` agent; the lines above the row leave no free space, so this is a layout decision.)* The lines above the row leave no room, so the label can read
   as a heading for the bottom row. The sources are in `docs/diagrams/`.
 - [x] **`/metodologie` scrolls sideways on a phone.** At 390px the page is 496px wide, because of `.nav-links`,
   `.scale-stepper` and `.theme-toggle`. The overflow is the same without the figure.
@@ -763,13 +763,13 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
 
 - [x] **Bookmark + învechit underline conflict** — switched `.inv .word-text` from `text-decoration: underline dotted` to `border-bottom: 1.5px dotted`. The two indicators now coexist: amber `text-decoration` for bookmark + red dotted `border-bottom` for inv.
 
-- [ ] **Mobile / narrow-viewport breakpoints** — `ui/templates/base.html` has no media queries; the 3-row filter bar and word grid are desktop-only. Add breakpoints for tablet (collapse filter rows into a single overflow menu) and phone (single column word grid, slide-up detail panel from bottom).
+- [obsolete] *(2026-11-10: the Flask UI is in `archive/ui/`.)* **Mobile / narrow-viewport breakpoints** — `ui/templates/base.html` has no media queries; the 3-row filter bar and word grid are desktop-only. Add breakpoints for tablet (collapse filter rows into a single overflow menu) and phone (single column word grid, slide-up detail panel from bottom).
 
 - [x] **Filter bar tooltips** — `title` attributes added to all filter bar controls: uitate/rare toggle, verdict pills (with per-verdict explanations), tier pills (with corpus/DEX logic notes), POS pills (full Romanian name as title), sort select, marks select, def toggle, domain/register/etymology/dict_min selects (domain tooltip flags the "any-sense" matching caveat), reset button.
 
-- [ ] **URL-encoded filter state** — encode all active filter values (word_tier, verdict, tier, sort, pos, register, domain, etymology, has_def, marks, q) into the URL query string on every filter change, so that the current view is bookmarkable and shareable. Use `history.replaceState` (no page reload) to update the URL as HTMX triggers fire; parse and restore from `window.location.search` on page load to pre-select the right controls. Both PHP and Flask apps should support this.
+- [obsolete] *(2026-11-10: the PHP app encodes filter state in the URL; the Flask UI is archived.)* **URL-encoded filter state** — encode all active filter values (word_tier, verdict, tier, sort, pos, register, domain, etymology, has_def, marks, q) into the URL query string on every filter change, so that the current view is bookmarkable and shareable. Use `history.replaceState` (no page reload) to update the URL as HTMX triggers fire; parse and restore from `window.location.search` on page load to pre-select the right controls. Both PHP and Flask apps should support this.
 
-- [ ] **Extract inline CSS to `ui/static/app.css`** — `ui/templates/base.html` carries ~870 lines of inline styles. Move to a static stylesheet so it can be cached + edited without touching templates. Set up Flask's static directory if not already wired.
+- [obsolete] *(2026-11-10: the Flask UI is in `archive/ui/`.)* **Extract inline CSS to `ui/static/app.css`** — `ui/templates/base.html` carries ~870 lines of inline styles. Move to a static stylesheet so it can be cached + edited without touching templates. Set up Flask's static directory if not already wired.
 
 - [ ] do we actually need the word search bar? Does word search add any overhead? Word exploration/discovery should be done by categories, this is not a dictionary. Maybe turn it into attribute search bar. 
 
@@ -786,7 +786,7 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
 - [ ] one word can have multiple definitions, include within the choices?
 - [x] mark words as unworthy, too simple 
 - [x] add bookmarking, favorites, add to list here - by using the game we create an audit tool
-- [ ] show definition for failure
+- [x] show definition for failure *(done by F03: the verdict reveals the full answer body, right or wrong; a wrong grilă answer also shows the picked word's definition.)*
 - [ ] move game types in the mid of header nav? 
 - [x] better emoji for meh - remove
 
@@ -1428,8 +1428,8 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
   - [ ] scrape [DC3](https://solirom-clre.gitlab.io/texts/dcr3/site/)
 - [ ] to manually revisit words that are "vezi și... " the 8: https://voroave.ro/?w=1.1f7.jkz.29y.4q6.509.5fq.66a.8da all 68: https://voroave.ro/?w=1.1f7.jkz.29y.4q6.509.5fq.66a.8da.14.3o.dx.jv.15w.17n.181.1en.1et.1f0.1f1.1f9.1fa.1fy.1gu.1gx.1h1.1i8.1iy.277.29w.2yc.4fk.5jx.84e.84u.856.juc.8by.8lj.8us.8v0.9i7.a1n.a1v.aal.bkq.bod.boo.bv3.bw3.c3p.efa.evl.eyb.k6e.h35.h37.h38.h39.h4a.hf9.hiq.hs3.hu1.huq.hvi.i6u.ii6.j6s
 - [ ] we're not showing the full definitions. should we scrape the others/initial too?
-- [ ] word definitions, sometimes we're showing the secondary definition, see `zăticni`
-- [ ] ux: wordlist should be the next tabindex after search box (when showing results)
+- [x] word definitions, sometimes we're showing the secondary definition, see `zăticni` *(checked 2026-11-10: sense 1 now renders with its synonym list, from the 2026-08-18 synonym fallback.)*
+- [x] ux: wordlist should be the next tabindex after search box (when showing results) *(fixed 2026-11-10: with a query in the box, Tab goes to the selected or first word and Shift+Tab from a word returns to the box; empty box keeps normal order. `tests/test_search_tab.js`.)*
 - [ ] are we ignoring DCRs? we should be
 - [ ] check [lexicro.com](https://api.lexicro.com/docs)
 - [ ] noticed DEXonline definitions have a json/xml feed, `https://dexonline.ro/definitie/{cuvânt}/{json|xml}`. Found out about it on [dexonline/issues/562](https://github.com/dexonline/dexonline/issues/562). See also [balajmarius/dexonline-mcp-server](https://github.com/balajmarius/dexonline-mcp-server)
@@ -1474,11 +1474,11 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
 
 - [x] `uitate` / filter: `în comparații / la comparativ` - words that don't seem to have anything with comparații -- can you backtrack on how did that end-up there? — **Fixed**: `în comparații / la comparativ` is a DEX usage-context note (word can be used in comparative phrases), not an archaic register. Removed from register filter dropdown via `_REGISTER_USAGE_NOTES` (2026-05-28). 38 other usage-style tags cleaned up at the same time.
 
-- [ ] rare / Filter: `Maramureș` lists 'biodiversitate'
+- [obsolete] rare / Filter: `Maramureș` lists 'biodiversitate' *(2026-11-10: the rare tab is gone and `biodiversitate` is not in `ui.db`.)*
 
 - [ ] remove _diminutive_, maybe?
 
-- [ ] how come psihoanaliză be a dex 4
+- [obsolete] how come psihoanaliză be a dex 4 *(2026-11-10: neither spelling is in `ui.db` any more.)*
 
 - [ ] remove old spellings, `giudecător` – can we check pronountiation - if it's too close to a popular word, flag it for removal
 
@@ -1490,7 +1490,7 @@ Ranked by impact-per-effort. Effort: XS / S / M / L.
 
 - [x] Cmd/Ctrl+R hijacked by the `r` shortcut — global keydown handlers now ignore events carrying meta/ctrl/alt (`app.js`, `joc.php`).
 
-- [ ] Note textarea: Enter saves, so Shift+Enter can't insert a newline (`app.js` capture-phase handler on `#note-input`). Decide whether multi-line notes matter; if so, save on Cmd/Ctrl+Enter or blur instead.
+- [obsolete] *(2026-11-10: the detail panel renders no note box; `app.js` keeps a dormant handler.)* Note textarea: Enter saves, so Shift+Enter can't insert a newline (`app.js` capture-phase handler on `#note-input`). Decide whether multi-line notes matter; if so, save on Cmd/Ctrl+Enter or blur instead.
 
 
 ## Server-side accounts — follow-ups (2026-08-02)
