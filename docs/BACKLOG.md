@@ -125,12 +125,17 @@ The account-recovery decision, the spot-check marks, the marking interface, lice
 - [ ] **Public alpha prerequisites and dictionary-source permission review.** The items are in "Public alpha
   readiness — 2026-10-05" below: the dexonline source licence list, `/stats` report access, production
   configuration, the "browser is the account" notice, a code licence (owner's choice), and the sample `ui.db`.
-- [ ] **Measure the ranking effect of the five-point definition bonus (`SCORE_HAS_DEF`).** Moved here from "Pipeline
+- [ ] **Decide on the five-point definition bonus (`SCORE_HAS_DEF`).** Measured 2026-11-09:
+  [docs/eval/definition-bonus.md](eval/definition-bonus.md). At a recalibrated threshold it changes 6 seam members and
+  moves other words by ≤ 3 places; its cost is drift (the 2026-08-17 scrape moved 68 words into `relevant`). Owner decides.
+  Original entry: **Measure the ranking effect of the five-point definition bonus.** Moved here from "Pipeline
   figure follow-ups". `validate_diachronic.py` sets `has_definition` from `definitions.db`, and `make_shortlist.py`
   adds 5 points. A merged `scrape_definitions.py` run can therefore change scores and seams. Measure the seam and
   rank changes with and without the bonus, then decide if it stays. No scoring weight was changed on 2026-11-09.
   The pipeline figure's badge says a definition adds points; update the badge if the rule changes.
-- [ ] **Re-extract the taxonomy and rebuild (operational; changes UI filters, not scores).** The old tuple parser
+- [~] **Re-extract the taxonomy and rebuild (operational; changes UI filters, not scores).** 2026-11-09: ran locally up to
+  `extract_meanings.py`; `build_ui_db.py` waits for the corpus recount, because 7 lexemes the old parser dropped
+  (`electricitate` among them) now read as `absent` and would get permanent ids ([F11](fixes/F11-local-followups.md)). The old tuple parser
   dropped 27 of 439 `Tag` rows (every value with `)` in it, measured on the full dump 2026-11-09), so 37,352
   `ObjectTag` rows point at tags missing from `lexemes.db`. 2,798 shortlist words (590 relevant) lose a tag: 1,002 an
   etymology (`limba slavă (veche)`, `turcism (învechit)`, `limba greacă (veche)`), 52 a domain (`(termen) militar`,

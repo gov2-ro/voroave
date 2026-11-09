@@ -1,7 +1,9 @@
 # F11 — Local follow-ups after the 2026-11-09 fixes
 
 Status: in progress 2026-11-09. Priority: P2. Needs no server access.
-Done: Step 0 (commits; tag `v0.9.0`), Step 1 (local Sinonime files deleted), Step 4.1 (`--db` with its own checkpoint).
+Done: Step 0 (commits; tag `v0.9.0`), Step 1 (local Sinonime files deleted), Step 4.1 (`--db` with its own checkpoint),
+Step 3 ([measurement](../eval/definition-bonus.md)). Step 2 ran up to `extract_meanings.py` and stopped before
+`build_ui_db.py` on purpose (see "Step 2 result"). Backup: `data/backup-2026-11-09/`.
 Step 4.2–4.5 run on the VPS (session `vps-sonnet`; phase 1 is a read-only disk and inventory check).
 
 ## Question
@@ -59,6 +61,18 @@ Measure and report:
   If any word changes seam, list it and stop: that contradicts the measured claim.
 - `git diff --numstat data/word_ids.tsv` shows additions only. If not, restore the backup and stop.
 - `python3 tools/run_tests.py` passes against the new `ui.db`.
+
+### Step 2 result (2026-11-09)
+
+- `Lexeme` 317,721 rows; `Tag` 439. Shortlist taxonomy: etymology 10,636 → 11,328, domain 1,024 → 1,067,
+  register 10,138 → 10,148 words.
+- 68 words changed seam (`curiosity` → `relevant`). Cause: 660 words gained a definition from the 2026-08-17
+  scrape, each +5 through `SCORE_HAS_DEF`, nothing else. Not caused by the parser or tag fixes.
+- 7 words joined the shortlist: `bădic`, `electricitate`, `fuștel`, `greșală`, `hermeneutic`, `judecie`, `vlădic`.
+  They are lexemes the old parser dropped, so the corpora never counted them, and they read as `absent`.
+  `electricitate` is not a forgotten word. **Do not run `build_ui_db.py` until the corpus recount (Step 4) is in:**
+  the build would give these 7 permanent ids in the append-only `data/word_ids.tsv`.
+- `public/data/ui.db` and `data/word_ids.tsv` are unchanged.
 
 ## Step 3 — Measure the five-point definition bonus
 

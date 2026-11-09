@@ -2,6 +2,16 @@
 
 Chronological log of meaningful work. Add entries under `## YYYY-MM-DD — Short Title`.
 
+## 2026-11-09 — F11: data refresh up to the shortlist; definition bonus measured
+
+Backed up the outputs to `data/backup-2026-11-09/`, then ran `extract_lexemes` through `extract_meanings` on the full dump.
+`Lexeme` 317,721 and `Tag` 439, as measured earlier. Shortlist words with an etymology: 10,636 → 11,328.
+68 words moved into `relevant`: all from 660 definitions merged on 2026-08-17 (+5 each), not from today's fixes.
+7 words joined as `absent` (`electricitate`, `greșală`, …): lexemes the old parser dropped, which no corpus has counted.
+Stopped before `build_ui_db.py` so they get no permanent ids; it runs after the VPS recount.
+Measured the definition bonus (`docs/eval/definition-bonus.md`): at a threshold lowered to 87 it changes 6 seam members
+and moves the rest by ≤ 3 places; the top 50 is identical. The decision stays with the owner.
+
 ## 2026-11-09 — F11 hand-off: Sinonime leftovers, `--db` for a recount
 
 Deleted `public/data/syn.db` and `data/processed/relations.db`. Sinonime holds newer copies of both
