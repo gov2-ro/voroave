@@ -125,6 +125,18 @@ The account-recovery decision, the spot-check marks, the marking interface, lice
 - [ ] **Public alpha prerequisites and dictionary-source permission review.** The items are in "Public alpha
   readiness — 2026-10-05" below: the dexonline source licence list, `/stats` report access, production
   configuration, the "browser is the account" notice, a code licence (owner's choice), and the sample `ui.db`.
+- [ ] **Definition scrape: use dexonline's JSON feed instead of the HTML page.** Noted 2026-11-10; nothing changed yet.
+  `https://dexonline.ro/definitie/<word>/json` (also `/xml`) returns every source's definition with `sourceName`,
+  `internalRep` (dexonline markup) and `htmlRep`. Tested on 3 words: `abstract` gave 28 definitions, full text for
+  sources the dump truncates to 23 characters (MDA2, CADE, DLRLC, NODEX, Scriban). A variant answers HTTP 301 to
+  `/intrare/<headword>/<id>/json`, so the client must follow redirects. `brodărie` → `broderie` (21 definitions) and
+  `bulucbașa` → `bulucbaș` (30) both resolve; these are the 2 `relevant` words without a definition.
+  Facts to keep: (1) the feed has no sinteză tree, which the current scraper reads first from `#tab_2`;
+  (2) results include entries for other headwords (`abstract` returns CADE `NUMĂR` and `NUME`), so match on the
+  headword in `internalRep`; (3) per-source attribution is exact, unlike the merged sinteză.
+  Decided 2026-11-13 (owner): use all sources provisionally; store every entry; publish the newest general
+  dictionary's definition. Brief: [F13](fixes/F13-definition-json.md). Removal path: `publish = 0` in
+  `data/source_roles.tsv` and a rebuild.
 - [x] **Decide on the five-point definition bonus (`SCORE_HAS_DEF`).** Decided 2026-11-10: no bonus, threshold 87
   (+6 relevant words without a definition, none removed; the curator demotes any that read badly). Measured 2026-11-09:
   [docs/eval/definition-bonus.md](eval/definition-bonus.md). At a recalibrated threshold it changes 6 seam members and
@@ -203,6 +215,13 @@ Then run a final test round, launch a public alpha, and ask for contributions.
   never listed it. The built `public/data/syn.db` and `data/processed/relations.db` are still in this
   checkout (gitignored, copied to Sinonime); delete them when convenient.
 
+- [ ] **Contact the dexonline team before the public launch. Blocks launch and promotion.** Owner decision
+  2026-11-13. The site is live but not promoted. F13 shows full text from dictionaries whose text the dexonline dump
+  does not ship (provisional). Ask which sources voroave may show, with what attribution. Remove the sources they
+  do not allow (`publish = 0` in `data/source_roles.tsv`, then rebuild). Until then: the site is indexable
+  (`robots.txt` allows `/`, a sitemap exists) and `share_meta()` puts a definition excerpt in each `?word=` link
+  preview, so search engines and link previews can keep copies after a removal. Decide whether to `noindex` until
+  the answer comes.
 - [ ] **dexonline licence: list the sources that are not open.** See <https://dexonline.ro/license>.
   The owner handles this after the MVP exists, as part of the permission request.
   List every dictionary source whose text the site displays (`words.definition`, senses, citations,

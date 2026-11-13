@@ -26,6 +26,7 @@ Historical plans describe earlier decisions; they do not override these briefs o
 | Later | [F10 — Recovery and backups](F10-recovery.md) | P2 planning | Decide account recovery before implementation |
 | Next | [F11 — Local follow-ups](F11-local-followups.md) | P2 | Commit, Sinonime leftovers, data refresh, bonus measurement, corpus recount |
 | Next | [F12 — Server operations](F12-server-operations.md) | P1 | Needs SSH from the owner; after F11 Step 0 |
+| Next | [F13 — Definitions from the JSON feed](F13-definition-json.md) | P2 | After the F11 rebuild; source list needs the owner |
 
 F07 can start first if missing dependencies block the other acceptance checks.
 F03 and F05 must agree on the answer-bearing markup before either is merged.
